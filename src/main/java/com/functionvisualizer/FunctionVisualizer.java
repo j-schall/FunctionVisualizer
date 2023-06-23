@@ -10,36 +10,29 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 
-import java.awt.*;
-import java.awt.geom.Point2D;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 
 public class FunctionVisualizer extends Application {
 
     private XYChart.Series series;
-    private LineChart coordinateSystem;
+    private LineChart<Number, Number> coordinateSystem;
+    private static Stage mainStage;
 
     private Window owner;
     private NumberAxis xAxis;
     private NumberAxis yAxis;
-    private static final DecimalFormat df = new DecimalFormat("#.00");
+    private Spinner<Integer> rangeSpinner;
+    private TableView<Coordinate> coordinateTable;
 
     @Override
     public void start(Stage stage) {
+        mainStage = stage;
         BorderPane root = new BorderPane();
         Scene scene = new Scene(root, 800, 400);
 
@@ -52,9 +45,6 @@ public class FunctionVisualizer extends Application {
         yAxis.setLabel("y");
         yAxis.setUpperBound(100);
         yAxis.setLowerBound(100);
-
-        final double lowerX = xAxis.getLowerBound();
-        final double upperX = xAxis.getUpperBound();
 
         series = new XYChart.Series<>();
         coordinateSystem = new LineChart<>(xAxis, yAxis);
@@ -73,55 +63,38 @@ public class FunctionVisualizer extends Application {
         bField.setDisable(true);
 
         // Zoom-Buttons werden erstellt, die in einer HBox neben dem Button, der die Graphen erstellt, plaziert werden
-        coordinateSystem.setOnScroll(e -> {
-            final double minX = xAxis.getLowerBound();
-            final double maxX = xAxis.getUpperBound();
-            double threshold = minX + (maxX - minX) / 2;
-            double x = e.getX();
-            double value = xAxis.getValueForDisplay(x).doubleValue();
-            double direction = e.getDeltaY();
+        coordinateSystem.setOnScroll(this::zoomIn);
 
-            if (direction > 0) {
-                if (maxX - minX <= 1) {
-                    return;
-                }
-                if (value > threshold) {
-                    xAxis.setLowerBound(minX + 1);
-                } else {
-                    xAxis.setUpperBound(maxX - 1);
-                }
-            } else {
-                if (value < threshold) {
-                    double nextBound = Math.max(lowerX, minX - 1);
-                    xAxis.setLowerBound(nextBound);
-                } else {
-                    double nextBound = Math.min(upperX, maxX + 1);
-                    xAxis.setUpperBound(nextBound);
-                }
-            }
-        });
-
-        var label = new Label("Funktionstypen auswählen:");
+        //var label = new Label("Funktionstypen auswählen:");
 
         // Hier werden die Formelnamen mit den entsprechenden Formeln gespeichert
         HashMap<String, String> funktionen = new HashMap<>();
-        funktionen.put("proportionaleFunktion", "f(x)=x*m");
-        funktionen.put("lineareFunktion", "f(x)=m*x+b");
+        funktionen.put("proportionale Funktion", "f(x)=m*x");
+        funktionen.put("lineare Funktion", "f(x)=m*x+b");
 
-        // ComboBox wird erstellt, um zwiscchen den Funktionstypen asuzuwählen
-        ComboBox<String> functionTypButton = new ComboBox<>();
-        functionTypButton.setItems(FXCollections.observableArrayList(funktionen.keySet()));
+        // SplitMenuButton wird erstellt, um zwiscchen den Funktionstypen asuzuwählen
+        SplitMenuButton functionTypButton = new SplitMenuButton();
 
-        functionTypButton.setValue(functionTypButton.getItems().get(0));
+        var formelLabel = new Label();
+        // Button der die Funktion, mit den entsprechenden Daten, erstellt
+        var createFunctionButton = new Button("Erstellen");
+        VBox.setMargin(createFunctionButton, new Insets(20));
+
+        for (String func : funktionen.keySet()) {
+            var menu = new MenuItem();
+            menu.setText(func);
+            functionTypButton.getItems().add(menu);
+
+            menu.setOnAction(e -> handleMenuItemSelected(menu, funktionen, formelLabel, createFunctionButton, mField, bField));
+        }
+
+        functionTypButton.setText("Funktionstyp");
         functionTypButton.setPrefWidth(150);
         BorderPane.setMargin(functionTypButton, new Insets(20));
 
-        // Wenn ein Item aus der Combobox ausgewählt wurde wird die entsprechende Formel,
-        // als Text in dem Label ("formelLabel"), ausgegeben
-        var formelLabel = new Label("Formel: " + funktionen.get("proportionaleFunktion"));
-
         // Tabelle + Tabellenspalten werden erstellt, die die Inhalte von der Klasse Coordinate enthalten
-        TableView<Coordinate> coordinateTable = new TableView<>();
+        coordinateTable = new TableView<>();
+        coordinateTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         TableColumn<Coordinate, Double> xColumn = new TableColumn<>("x");
         xColumn.setCellValueFactory(data -> data.getValue().xProperty());
@@ -130,73 +103,19 @@ public class FunctionVisualizer extends Application {
         yColumn.setCellValueFactory(data -> data.getValue().yProperty());
         coordinateTable.getColumns().addAll(xColumn, yColumn);
 
-        // Button der die Funktion, mit den entsprechenden Daten, erstellt
-        var createFunctionButton = new Button("Erstellen");
-        VBox.setMargin(createFunctionButton, new Insets(20));
 
         // Spinner wird erstellt, um die Länge des Graphen einzustellen
         var infoLabel = new Label("Welcher Ausschnitt des Graphen soll gezeigt werden?");
 
-        Spinner<Integer> rangeSpinner = new Spinner<>();
+        rangeSpinner = new Spinner<>();
         rangeSpinner.setEditable(true);
-        var valueFactory= new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100);
+
+        var valueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100);
         rangeSpinner.setValueFactory(valueFactory);
 
-        for (int i = 0; i < funktionen.size(); i++) {
-            bField.setDisable(true);
-            functionTypButton.setOnAction(e -> {
-                String selectedItem = functionTypButton.getSelectionModel().getSelectedItem();
-                String formel = funktionen.get(selectedItem);
-                formelLabel.setText("Formel: " + formel);
-
-                if (!selectedItem.equals("proportionaleFunktion")) {
-                    bField.setDisable(false);
-                    createFunctionButton.setOnAction(eb -> {
-
-                        try {
-                            int range = rangeSpinner.getValue();
-                            double m = Double.parseDouble(mField.getText());
-                            double b = Double.parseDouble(bField.getText());
-
-                            // X-Achse und Y-Achse werden der Länge des Graphen angepasst
-                            xAxis.setLowerBound(-range);
-                            xAxis.setUpperBound(range);
-                            yAxis.setLowerBound(-range);
-                            yAxis.setUpperBound(range);
-
-                            createLinearFunction(m, b, range, coordinateTable);
-                        } catch (NumberFormatException exception) {
-                            owner = createFunctionButton.getScene().getWindow();
-                            showError(AlertType.ERROR, owner, "Error: " + exception,
-                                    "Die angegebenen Zahlen konnten nicht formatiert werden. Bitte überprüfen Sie die Zahlen.");
-                        }
-                    });
-                } else {
-                    bField.setDisable(true);
-                    createFunctionButton.setOnAction(ea -> {
-                        try {
-                            int range = rangeSpinner.getValue();
-                            double m = Double.parseDouble(mField.getText());
-
-                            xAxis.setLowerBound(-range);
-                            xAxis.setUpperBound(range);
-                            yAxis.setLowerBound(-range);
-                            yAxis.setUpperBound(range);
-
-                            createProportionaleFunction(m, range, coordinateTable);
-                        } catch (NumberFormatException exception) {
-                            owner = createFunctionButton.getScene().getWindow();
-                            showError(AlertType.ERROR, owner, "Error: " + exception,
-                                    "Die angegebenen Zahlen konnten nicht formatiert werden. Bitte überprüfen Sie die Zahlen.");
-                        }
-                    });
-                }
-
-            });
-        }
-
+        /* Hier werden die Nodes der VBox hinzugefügt und angezeigt */
         VBox settingsSide = new VBox();
-        settingsSide.getChildren().addAll(label,
+        settingsSide.getChildren().addAll(
                 functionTypButton,
                 formelLabel,
                 mField,
@@ -208,9 +127,91 @@ public class FunctionVisualizer extends Application {
 
         root.setLeft(coordinateSystem);
         root.setRight(settingsSide);
+
         stage.setScene(scene);
         stage.setTitle("Function Visualisation");
         stage.show();
+    }
+
+    private void handleMenuItemSelected(MenuItem menuItem, HashMap<String, String> map, Label formelLabel, Button button,
+                                        TextField mField, TextField bField) {
+
+        String selectedItem = menuItem.getText();
+        formelLabel.setText("Formel: " + map.get(selectedItem));
+
+        if (map.containsKey(selectedItem) && selectedItem.contentEquals("proportionale Funktion")) {
+            bField.setDisable(true);
+            button.setOnMouseClicked(e -> {
+                try {
+                    int range = rangeSpinner.getValue();
+                    double m = Double.parseDouble(mField.getText());
+
+                    xAxis.setLowerBound(-range);
+                    xAxis.setUpperBound(range);
+                    yAxis.setLowerBound(-range);
+                    yAxis.setUpperBound(range);
+
+                    createProportionaleFunction(m, range, coordinateTable);
+                } catch (NumberFormatException exception) {
+                    owner = button.getScene().getWindow();
+                    showError(AlertType.ERROR, owner, "Error: " + exception,
+                            "Die angegebenen Zahlen konnten nicht formatiert werden. " +
+                                    "Bitte überprüfen Sie die Zahlen.");
+                }
+            });
+        } else if (map.containsKey(selectedItem) && selectedItem.contentEquals("lineare Funktion")) {
+            bField.setDisable(false);
+            button.setOnMouseClicked(e -> {
+                try {
+                    int range = rangeSpinner.getValue();
+                    double m = Double.parseDouble(mField.getText());
+                    double b = Double.parseDouble(bField.getText());
+
+                    xAxis.setLowerBound(-range);
+                    xAxis.setUpperBound(range);
+                    yAxis.setLowerBound(-range);
+                    yAxis.setUpperBound(range);
+
+                    createLinearFunction(m, b, range, coordinateTable);
+                } catch (NumberFormatException exception) {
+                    owner = button.getScene().getWindow();
+                    showError(AlertType.ERROR, owner, "Error: " + exception,
+                            "Die angegebenen Zahlen konnten nicht formatiert werden. " +
+                                    "Bitte überprüfen Sie die Zahlen.");
+                }
+            });
+        }
+    }
+
+    private void zoomIn(ScrollEvent e) {
+        final double lowerX = xAxis.getLowerBound();
+        final double upperX = xAxis.getUpperBound();
+
+        final double minX = xAxis.getLowerBound();
+        final double maxX = xAxis.getUpperBound();
+        double threshold = minX + (maxX - minX) / 2;
+        double x = e.getX();
+        double value = xAxis.getValueForDisplay(x).doubleValue();
+        double direction = e.getDeltaY();
+
+        if (direction > 0) {
+            if (maxX - minX <= 1) {
+                return;
+            }
+            if (value > threshold) {
+                xAxis.setLowerBound(minX + 1);
+            } else {
+                xAxis.setUpperBound(maxX - 1);
+            }
+        } else {
+            if (value < threshold) {
+                double nextBound = Math.max(lowerX, minX - 1);
+                xAxis.setLowerBound(nextBound);
+            } else {
+                double nextBound = Math.min(upperX, maxX + 1);
+                xAxis.setUpperBound(nextBound);
+            }
+        }
     }
 
     private void createLinearFunction(double m, double b, int range, TableView<Coordinate> pointTable) {
@@ -227,7 +228,7 @@ public class FunctionVisualizer extends Application {
     private void createProportionaleFunction(double m, int range, TableView<Coordinate> pointTable) {
         ObservableList<Coordinate> dataPoints = FXCollections.observableArrayList();
         series.getData().clear();
-        for (int x = -range; x <= range; x++) {
+        for (double x = -range; x <= range; x++) {
             double y = m * x;
             dataPoints.add(new Coordinate(x, y));
             series.getData().add(new XYChart.Data<>(x, y));
