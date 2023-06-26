@@ -1,6 +1,5 @@
 package com.functionvisualizer;
 
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ObservableValue;
 
@@ -27,6 +26,14 @@ public class Coordinate {
 
     public ObservableValue<Double> yProperty() {
         return y.asObject();
+    }
+
+    @Override
+    public String toString() {
+        return "Coordinate{" +
+                "x=" + x +
+                ", y=" + y +
+                '}';
     }
 }
 

@@ -1,6 +1,8 @@
 package com.functionvisualizer;
 
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -10,11 +12,16 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.input.ScrollEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import org.gillius.jfxutils.chart.AxisConstraint;
+import org.gillius.jfxutils.chart.AxisConstraintStrategy;
+import org.gillius.jfxutils.chart.ChartPanManager;
+import org.gillius.jfxutils.chart.JFXChartUtil;
 
 import java.util.HashMap;
 
@@ -22,19 +29,17 @@ public class FunctionVisualizer extends Application {
 
     private XYChart.Series series;
     private LineChart<Number, Number> coordinateSystem;
-    private static Stage mainStage;
 
     private Window owner;
     private NumberAxis xAxis;
     private NumberAxis yAxis;
-    private Spinner<Integer> rangeSpinner;
+    private Spinner<Double> rangeSpinner;
     private TableView<Coordinate> coordinateTable;
 
     @Override
     public void start(Stage stage) {
-        mainStage = stage;
         BorderPane root = new BorderPane();
-        Scene scene = new Scene(root, 800, 400);
+        Scene scene = new Scene(root, 840, 450);
 
         // Erstellung des Koordinatensystems
         xAxis = new NumberAxis();
@@ -47,6 +52,7 @@ public class FunctionVisualizer extends Application {
         yAxis.setLowerBound(100);
 
         series = new XYChart.Series<>();
+        series.setName("Punkte");
         coordinateSystem = new LineChart<>(xAxis, yAxis);
         coordinateSystem.getData().add(series);
         coordinateSystem.autosize();
@@ -62,10 +68,8 @@ public class FunctionVisualizer extends Application {
         bField.setPromptText("y-Achsenabschnitt");
         bField.setDisable(true);
 
-        // Zoom-Buttons werden erstellt, die in einer HBox neben dem Button, der die Graphen erstellt, plaziert werden
-        coordinateSystem.setOnScroll(this::zoomIn);
-
-        //var label = new Label("Funktionstypen auswählen:");
+        // Die Methode zoomIn() wird aufgerufen, um in das Koordinatensytem zu zoomen
+        coordinateSystem.setOnMouseClicked(this::zoomIn);
 
         // Hier werden die Formelnamen mit den entsprechenden Formeln gespeichert
         HashMap<String, String> funktionen = new HashMap<>();
@@ -75,7 +79,7 @@ public class FunctionVisualizer extends Application {
         // SplitMenuButton wird erstellt, um zwiscchen den Funktionstypen asuzuwählen
         SplitMenuButton functionTypButton = new SplitMenuButton();
 
-        var formelLabel = new Label();
+        var formelLabel = new Label("Formel: Noch keine ausgewählt!");
         // Button der die Funktion, mit den entsprechenden Daten, erstellt
         var createFunctionButton = new Button("Erstellen");
         VBox.setMargin(createFunctionButton, new Insets(20));
@@ -85,7 +89,8 @@ public class FunctionVisualizer extends Application {
             menu.setText(func);
             functionTypButton.getItems().add(menu);
 
-            menu.setOnAction(e -> handleMenuItemSelected(menu, funktionen, formelLabel, createFunctionButton, mField, bField));
+            menu.setOnAction(e -> handleMenuItemSelected(menu, funktionen, formelLabel,
+                    createFunctionButton, mField, bField));
         }
 
         functionTypButton.setText("Funktionstyp");
@@ -103,14 +108,13 @@ public class FunctionVisualizer extends Application {
         yColumn.setCellValueFactory(data -> data.getValue().yProperty());
         coordinateTable.getColumns().addAll(xColumn, yColumn);
 
-
         // Spinner wird erstellt, um die Länge des Graphen einzustellen
-        var infoLabel = new Label("Welcher Ausschnitt des Graphen soll gezeigt werden?");
+        var infoLabel = new Label("Welcher Ausschnitt (x-Achse) des Graphen soll gezeigt werden?");
 
         rangeSpinner = new Spinner<>();
         rangeSpinner.setEditable(true);
 
-        var valueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100);
+        var valueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(1, 10000000);
         rangeSpinner.setValueFactory(valueFactory);
 
         /* Hier werden die Nodes der VBox hinzugefügt und angezeigt */
@@ -143,7 +147,7 @@ public class FunctionVisualizer extends Application {
             bField.setDisable(true);
             button.setOnMouseClicked(e -> {
                 try {
-                    int range = rangeSpinner.getValue();
+                    double range = rangeSpinner.getValue();
                     double m = Double.parseDouble(mField.getText());
 
                     xAxis.setLowerBound(-range);
@@ -163,7 +167,7 @@ public class FunctionVisualizer extends Application {
             bField.setDisable(false);
             button.setOnMouseClicked(e -> {
                 try {
-                    int range = rangeSpinner.getValue();
+                    double range = rangeSpinner.getValue();
                     double m = Double.parseDouble(mField.getText());
                     double b = Double.parseDouble(bField.getText());
 
@@ -183,38 +187,29 @@ public class FunctionVisualizer extends Application {
         }
     }
 
-    private void zoomIn(ScrollEvent e) {
-        final double lowerX = xAxis.getLowerBound();
-        final double upperX = xAxis.getUpperBound();
-
-        final double minX = xAxis.getLowerBound();
-        final double maxX = xAxis.getUpperBound();
-        double threshold = minX + (maxX - minX) / 2;
-        double x = e.getX();
-        double value = xAxis.getValueForDisplay(x).doubleValue();
-        double direction = e.getDeltaY();
-
-        if (direction > 0) {
-            if (maxX - minX <= 1) {
-                return;
-            }
-            if (value > threshold) {
-                xAxis.setLowerBound(minX + 1);
+    private void zoomIn(MouseEvent e) {
+        // Das Dependency jfxutils, macht das der LineChart verändert werden kann
+        ChartPanManager panner = new ChartPanManager(coordinateSystem);
+        //Wenn der rechte Mousebutton gedrückt wurde, verschiebt man das Sichtfeld des Koordinatensytsems
+        panner.setMouseFilter(mouseEvent -> {
+            if (mouseEvent.getButton() == MouseButton.PRIMARY) {//set your custom combination to trigger navigation
+                // let it through
             } else {
-                xAxis.setUpperBound(maxX - 1);
+                mouseEvent.consume();
             }
-        } else {
-            if (value < threshold) {
-                double nextBound = Math.max(lowerX, minX - 1);
-                xAxis.setLowerBound(nextBound);
-            } else {
-                double nextBound = Math.min(upperX, maxX + 1);
-                xAxis.setUpperBound(nextBound);
-            }
-        }
+        });
+        AxisConstraintStrategy strategies = chartInputContext -> AxisConstraint.Both;
+        panner.setAxisConstraintStrategy(strategies);
+        panner.start();
+
+        //holding the right mouse button will draw a rectangle to zoom to desired location
+        JFXChartUtil.setupZooming(coordinateSystem, mouseEvent -> {
+            if (mouseEvent.getButton() != MouseButton.SECONDARY)//set your custom combination to trigger rectangle zooming
+                mouseEvent.consume();
+        });
     }
 
-    private void createLinearFunction(double m, double b, int range, TableView<Coordinate> pointTable) {
+    private void createLinearFunction(double m, double b, double range, TableView<Coordinate> pointTable) {
         ObservableList<Coordinate> dataPoints = FXCollections.observableArrayList();
         series.getData().clear();
         for (double x = -range; x <= range; x++) { //Variable range definiert die Länge des Graphen
@@ -223,9 +218,10 @@ public class FunctionVisualizer extends Application {
             series.getData().add(new XYChart.Data<>(x, y));
         }
         pointTable.setItems(dataPoints);
+
     }
 
-    private void createProportionaleFunction(double m, int range, TableView<Coordinate> pointTable) {
+    private void createProportionaleFunction(double m, double range, TableView<Coordinate> pointTable) {
         ObservableList<Coordinate> dataPoints = FXCollections.observableArrayList();
         series.getData().clear();
         for (double x = -range; x <= range; x++) {
@@ -245,8 +241,5 @@ public class FunctionVisualizer extends Application {
         alert.show();
     }
 
-    public static void main(String[] args) {
-        launch();
-    }
 }
 
