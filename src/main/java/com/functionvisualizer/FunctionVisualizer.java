@@ -212,31 +212,6 @@ public class FunctionVisualizer extends Application {
                 mouseEvent.consume();
         });
     }
-    /*
-    @Override
-    public void createLinearFunction(double m, double b, double range, TableView<Coordinate> pointTable, XYChart.Series series) {
-        ObservableList<Coordinate> dataPoints = FXCollections.observableArrayList();
-        series.getData().clear();
-        for (double x = -range; x <= range; x++) { //Variable range definiert die Länge des Graphen
-            double y = m * x + b;
-            dataPoints.add(new Coordinate(x, y));
-            series.getData().add(new XYChart.Data<>(x, y));
-        }
-        pointTable.setItems(dataPoints);
-    }
-
-    @Override
-    public void createProportionaleFunction(double m, double range, TableView<Coordinate> pointTable, XYChart.Series series) {
-        ObservableList<Coordinate> dataPoints = FXCollections.observableArrayList();
-        series.getData().clear();
-        for (double x = -range; x <= range; x++) {
-            double y = m * x;
-            dataPoints.add(new Coordinate(x, y));
-            series.getData().add(new XYChart.Data<>(x, y));
-        }
-        pointTable.setItems(dataPoints);
-    }
-     */
 
     private void showError(AlertType type, Window owner, String title, String message) {
         Alert alert = new Alert(type);
