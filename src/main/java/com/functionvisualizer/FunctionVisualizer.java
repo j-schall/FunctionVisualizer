@@ -1,10 +1,6 @@
 package com.functionvisualizer;
 
 import javafx.application.Application;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
@@ -27,14 +23,18 @@ import java.util.HashMap;
 
 public class FunctionVisualizer extends Application {
 
-    private XYChart.Series series;
+    public static XYChart.Series series;
     private LineChart<Number, Number> coordinateSystem;
 
     private Window owner;
     private NumberAxis xAxis;
     private NumberAxis yAxis;
     private Spinner<Double> rangeSpinner;
-    private TableView<Coordinate> coordinateTable;
+    public static TableView<Coordinate> coordinateTable;
+    public static boolean isPressed;
+    public static double m;
+    public static double b;
+    public static double range;
 
     @Override
     public void start(Stage stage) {
@@ -147,15 +147,17 @@ public class FunctionVisualizer extends Application {
             bField.setDisable(true);
             button.setOnMouseClicked(e -> {
                 try {
-                    double range = rangeSpinner.getValue();
-                    double m = Double.parseDouble(mField.getText());
+                    range = rangeSpinner.getValue();
+                    m = Double.parseDouble(mField.getText());
 
                     xAxis.setLowerBound(-range);
                     xAxis.setUpperBound(range);
                     yAxis.setLowerBound(-range);
                     yAxis.setUpperBound(range);
 
-                    createProportionaleFunction(m, range, coordinateTable);
+                    isPressed = false;
+                    CalculationThread thread = new CalculationThread();
+                    thread.start();
                 } catch (NumberFormatException exception) {
                     owner = button.getScene().getWindow();
                     showError(AlertType.ERROR, owner, "Error: " + exception,
@@ -167,16 +169,18 @@ public class FunctionVisualizer extends Application {
             bField.setDisable(false);
             button.setOnMouseClicked(e -> {
                 try {
-                    double range = rangeSpinner.getValue();
-                    double m = Double.parseDouble(mField.getText());
-                    double b = Double.parseDouble(bField.getText());
+                    range = rangeSpinner.getValue();
+                    m = Double.parseDouble(mField.getText());
+                    b = Double.parseDouble(bField.getText());
 
                     xAxis.setLowerBound(-range);
                     xAxis.setUpperBound(range);
                     yAxis.setLowerBound(-range);
                     yAxis.setUpperBound(range);
 
-                    createLinearFunction(m, b, range, coordinateTable);
+                    isPressed = true;
+                    CalculationThread thread = new CalculationThread();
+                    thread.start();
                 } catch (NumberFormatException exception) {
                     owner = button.getScene().getWindow();
                     showError(AlertType.ERROR, owner, "Error: " + exception,
@@ -208,8 +212,9 @@ public class FunctionVisualizer extends Application {
                 mouseEvent.consume();
         });
     }
-
-    private void createLinearFunction(double m, double b, double range, TableView<Coordinate> pointTable) {
+    /*
+    @Override
+    public void createLinearFunction(double m, double b, double range, TableView<Coordinate> pointTable, XYChart.Series series) {
         ObservableList<Coordinate> dataPoints = FXCollections.observableArrayList();
         series.getData().clear();
         for (double x = -range; x <= range; x++) { //Variable range definiert die Länge des Graphen
@@ -218,10 +223,10 @@ public class FunctionVisualizer extends Application {
             series.getData().add(new XYChart.Data<>(x, y));
         }
         pointTable.setItems(dataPoints);
-
     }
 
-    private void createProportionaleFunction(double m, double range, TableView<Coordinate> pointTable) {
+    @Override
+    public void createProportionaleFunction(double m, double range, TableView<Coordinate> pointTable, XYChart.Series series) {
         ObservableList<Coordinate> dataPoints = FXCollections.observableArrayList();
         series.getData().clear();
         for (double x = -range; x <= range; x++) {
@@ -231,6 +236,7 @@ public class FunctionVisualizer extends Application {
         }
         pointTable.setItems(dataPoints);
     }
+     */
 
     private void showError(AlertType type, Window owner, String title, String message) {
         Alert alert = new Alert(type);
