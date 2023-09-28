@@ -1,5 +1,6 @@
 package com.functionvisualizer;
 
+import com.functionvisualizer.functions.LineareFunction;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -12,7 +13,6 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -20,10 +20,8 @@ import org.gillius.jfxutils.chart.AxisConstraint;
 import org.gillius.jfxutils.chart.AxisConstraintStrategy;
 import org.gillius.jfxutils.chart.ChartPanManager;
 import org.gillius.jfxutils.chart.JFXChartUtil;
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -259,6 +257,7 @@ public class FunctionVisualizer extends Application {
 
         applyButton.setOnAction(e -> {
             List<Double> doubles = new ArrayList<>();
+            LineareFunction function = new LineareFunction();
                 try {
                     for (TextField tf : textFields) {
                         double num = Double.parseDouble(tf.getText());
@@ -268,7 +267,7 @@ public class FunctionVisualizer extends Application {
                             Coordinate coordinate1 = new Coordinate(doubles.get(0), doubles.get(1));
                             Coordinate coordinate2 = new Coordinate(doubles.get(2), doubles.get(3));
 
-                            String func = thread.calculateLineareFunction(coordinate1, coordinate2);
+                            String func = function.calculateLineareFunction(coordinate1, coordinate2);
                             label.setText("Funktionsgleichung: " + func);
                         }
                     }
