@@ -1,8 +1,10 @@
 package com.functionvisualizer;
 
 import com.functionvisualizer.functions.LineareFunction;
+import com.functionvisualizer.functions.SimpleQuadraticFunction;
 import javafx.application.Application;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
@@ -36,13 +38,19 @@ public class FunctionVisualizer extends Application {
     private Spinner<Double> rangeSpinner;
     public static TableView<Coordinate> coordinateTable;
     private Scene scene;
-    public static boolean isPressed;
+    public static int funcIndex;
     public static double m;
     public static double b;
+    public static double n;
     public static double range;
+    private static final Button createFunctionButton = new Button("Erstellen");
 
     @Override
     public void start(Stage stage) {
+        functionVisualizerGUI(stage);
+    }
+
+    private void functionVisualizerGUI(Stage stage) {
         BorderPane root = new BorderPane();
         scene = new Scene(root, 840, 450);
 
@@ -51,7 +59,7 @@ public class FunctionVisualizer extends Application {
         Menu optionMenu = new Menu("Optionen");
 
         MenuItem caluclateLineareFunctionItem = new MenuItem("Lineare Funktion berechnen");
-        caluclateLineareFunctionItem.setOnAction(e -> calculateFunc(stage));
+        caluclateLineareFunctionItem.setOnAction(e -> calculateFuncGUI(stage));
 
         optionMenu.getItems().add(caluclateLineareFunctionItem);
         bar.getMenus().add(optionMenu);
@@ -91,13 +99,13 @@ public class FunctionVisualizer extends Application {
         HashMap<String, String> funktionen = new HashMap<>();
         funktionen.put("proportionale Funktion", "f(x)=m*x");
         funktionen.put("lineare Funktion", "f(x)=m*x+b");
+        funktionen.put("einfache quadratische Funktion", "f(x)=n*x²");
 
         // SplitMenuButton wird erstellt, um zwiscchen den Funktionstypen asuzuwählen
         SplitMenuButton functionTypButton = new SplitMenuButton();
 
-        var formelLabel = new Label("Formel: Noch keine ausgewählt!");
+        var formelArea = new Label("Formel: Noch keine ausgewählt!");
         // Button der die Funktion, mit den entsprechenden Daten, erstellt
-        var createFunctionButton = new Button("Erstellen");
         VBox.setMargin(createFunctionButton, new Insets(20));
 
         for (String func : funktionen.keySet()) {
@@ -105,7 +113,7 @@ public class FunctionVisualizer extends Application {
             menu.setText(func);
             functionTypButton.getItems().add(menu);
 
-            menu.setOnAction(e -> handleMenuItemSelected(menu, funktionen, formelLabel,
+            menu.setOnAction(e -> handleMenuItemSelected(menu, funktionen, formelArea,
                     createFunctionButton, mField, bField));
         }
 
@@ -130,14 +138,14 @@ public class FunctionVisualizer extends Application {
         rangeSpinner = new Spinner<>();
         rangeSpinner.setEditable(true);
 
-        var valueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(1, 10000000);
+        var valueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(1, 1000);
         rangeSpinner.setValueFactory(valueFactory);
 
         /* Hier werden die Nodes der VBox hinzugefügt und angezeigt */
         VBox settingsSide = new VBox();
         settingsSide.getChildren().addAll(
                 functionTypButton,
-                formelLabel,
+                formelArea,
                 mField,
                 bField,
                 infoLabel,
@@ -154,11 +162,11 @@ public class FunctionVisualizer extends Application {
         stage.show();
     }
 
-    private void handleMenuItemSelected(MenuItem menuItem, HashMap<String, String> map, Label formelLabel, Button button,
+    private void handleMenuItemSelected(MenuItem menuItem, HashMap<String, String> map, Label formelArea, Button button,
                                         TextField mField, TextField bField) {
 
         String selectedItem = menuItem.getText();
-        formelLabel.setText("Formel: " + map.get(selectedItem));
+        formelArea.setText("Formel: " + map.get(selectedItem));
 
         if (map.containsKey(selectedItem) && selectedItem.contentEquals("proportionale Funktion")) {
             bField.setDisable(true);
@@ -172,7 +180,7 @@ public class FunctionVisualizer extends Application {
                     yAxis.setLowerBound(-range);
                     yAxis.setUpperBound(range);
 
-                    isPressed = false;
+                    funcIndex = 1;
                     CalculationThread thread = new CalculationThread();
                     //System.out.println(thread.calculateLineareFunction(new Coordinate(-1, -6), new Coordinate(3.5, -1.5)));
                     thread.start();
@@ -196,7 +204,30 @@ public class FunctionVisualizer extends Application {
                     yAxis.setLowerBound(-range);
                     yAxis.setUpperBound(range);
 
-                    isPressed = true;
+                    funcIndex = 2;
+                    CalculationThread thread = new CalculationThread();
+                    thread.start();
+                } catch (NumberFormatException exception) {
+                    owner = button.getScene().getWindow();
+                    showError(AlertType.ERROR, owner, "Error: " + exception,
+                            "Die angegebenen Zahlen konnten nicht formatiert werden. " +
+                                    "Bitte überprüfen Sie die Zahlen.");
+                }
+            });
+        } else if (map.containsKey(selectedItem) && selectedItem.contentEquals("einfache quadratische Funktion")) {
+            bField.setDisable(true);
+            mField.setPromptText("n");
+            button.setOnMouseClicked(e -> {
+                try {
+                    range = rangeSpinner.getValue();
+                    n = Double.parseDouble(mField.getText());
+
+                    xAxis.setLowerBound(-range);
+                    xAxis.setUpperBound(range);
+                    yAxis.setLowerBound(-range);
+                    yAxis.setUpperBound(range);
+
+                    funcIndex = 3;
                     CalculationThread thread = new CalculationThread();
                     thread.start();
                 } catch (NumberFormatException exception) {
@@ -214,8 +245,8 @@ public class FunctionVisualizer extends Application {
         ChartPanManager panner = new ChartPanManager(coordinateSystem);
         //Wenn der rechte Mousebutton gedrückt wurde, verschiebt man das Sichtfeld des Koordinatensytsems
         panner.setMouseFilter(mouseEvent -> {
-            if (mouseEvent.getButton() == MouseButton.PRIMARY) {//set your custom combination to trigger navigation
-                // let it through
+            if (mouseEvent.getButton() == MouseButton.PRIMARY) {
+                // Lässt es durchgehen
             } else {
                 mouseEvent.consume();
             }
@@ -224,59 +255,93 @@ public class FunctionVisualizer extends Application {
         panner.setAxisConstraintStrategy(strategies);
         panner.start();
 
-        //holding the right mouse button will draw a rectangle to zoom to desired location
+        // Wenn man die rechte Maustaste gedrückt hält, wird ein Rechteck gezeichnet, um an die gewünschte Stelle zu zoomen
         JFXChartUtil.setupZooming(coordinateSystem, mouseEvent -> {
-            if (mouseEvent.getButton() != MouseButton.SECONDARY)//set your custom combination to trigger rectangle zooming
+            if (mouseEvent.getButton() != MouseButton.SECONDARY) // Zoomen wird getriggert, wenn man die secondäre Maustaste gedrückt hat
                 mouseEvent.consume();
         });
     }
 
-    private void calculateFunc(Stage stage) {
-        CalculationThread thread = new CalculationThread();
+    private void calculateFuncGUI(Stage stage) {
+        // UI
         GridPane pane = new GridPane();
-        scene = new Scene(pane);
+        VBox box = new VBox();
+        scene = new Scene(box);
 
         Button applyButton = new Button("Bestätigen");
-        Label label = new Label();
+        Button backButton = new Button("Zurück");
+        Button visualizeButton = new Button("Visualisieren");
 
-        pane.add(applyButton, 0, 2);
-        pane.add(label, 0, 3);
+        TextArea formelArea = new TextArea();
+        formelArea.setPromptText("Funktionsgleichung: ");
+        formelArea.setWrapText(true);
 
+        pane.add(backButton, 0, 0);
+        pane.add(applyButton, 0, 3);
+        pane.add(formelArea, 1, 4);
+        box.getChildren().addAll(pane, formelArea, visualizeButton);
+
+        int inset = 10;
+        VBox.setMargin(formelArea, new Insets(inset));
+        VBox.setMargin(visualizeButton, new Insets(inset));
+        VBox.setMargin(pane, new Insets(inset));
+
+        // Erstellung der Textfelder, um die Daten des Benutzers in die Coordinate Klasse zu integrieren
         String[] fields = {"x-Koordinate", "y-Koordinate"};
         int l = fields.length;
-        // Erstellung der Textfelder, um die Daten des Benutzers in die Coordinate Klasse zu integrieren
         List<TextField> textFields = new ArrayList<>();
         for (int row = 0; row < l; row++) {
-            for (int col = 0; col < l; col++) {
+            for (int col = 1; col < l + 1; col++) {
                 TextField field = new TextField();
-                field.setPromptText(fields[col%2]);
+                field.setPromptText(fields[col/2]);
                 pane.add(field, row, col);
                 textFields.add(field);
             }
         }
 
+        // Speichert die Funktionsgleichung
+        final String[] func = new String[1];
         applyButton.setOnAction(e -> {
-            List<Double> doubles = new ArrayList<>();
-            LineareFunction function = new LineareFunction();
-                try {
-                    for (TextField tf : textFields) {
-                        double num = Double.parseDouble(tf.getText());
-                        doubles.add(num);
-
-                        if (doubles.size() >= 4) {
-                            Coordinate coordinate1 = new Coordinate(doubles.get(0), doubles.get(1));
-                            Coordinate coordinate2 = new Coordinate(doubles.get(2), doubles.get(3));
-
-                            String func = function.calculateLineareFunction(coordinate1, coordinate2);
-                            label.setText("Funktionsgleichung: " + func);
-                        }
-                    }
-                } catch (NumberFormatException | IndexOutOfBoundsException ex) {
-                    Window owner = applyButton.getScene().getWindow();
-                    showError(AlertType.ERROR, owner, ex.toString(), "Zahlen konnten nicht formatiert werden!");
-                }
+            func[0] = sendToThread(textFields, formelArea, applyButton, visualizeButton, stage);
+            formelArea.setText(func[0]);
         });
+
+        backButton.setOnAction(e -> functionVisualizerGUI(stage));
+
         stage.setScene(scene);
+    }
+
+    private String sendToThread(List<TextField> textFields, TextArea area, Button button, Button button1, Stage stage) {
+        List<Double> doubles = new ArrayList<>();
+        LineareFunction function = new LineareFunction();
+        try {
+            for (TextField tf : textFields) {
+                double num = Double.parseDouble(tf.getText());
+                doubles.add(num);
+
+                if (doubles.size() >= 4) {
+                    Coordinate coordinate1 = new Coordinate(doubles.get(0), doubles.get(1));
+                    Coordinate coordinate2 = new Coordinate(doubles.get(2), doubles.get(3));
+
+                    String func = function.calculateLineareFunction(coordinate1, coordinate2);
+
+                    // Die Funktion, welche berechnet wurde, wird in dem Koordinatensystem veranschaulicht
+                    button1.setOnAction(e -> {
+                        double m = function.getM();
+                        double b = function.getB();
+
+                        functionVisualizerGUI(stage);
+                        function.create(m, b, coordinate1.getX(), coordinateTable, series);
+                    });
+
+                    return func;
+                }
+            }
+        } catch (NumberFormatException | IndexOutOfBoundsException ex) {
+            Window owner = button.getScene().getWindow();
+            showError(AlertType.ERROR, owner, ex.toString(), "Zahlen konnten nicht formatiert werden!");
+        }
+        return null;
     }
 
     private void showError(AlertType type, Window owner, String title, String message) {

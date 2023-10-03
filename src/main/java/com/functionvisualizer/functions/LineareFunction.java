@@ -7,6 +7,10 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.TableView;
 
 public class LineareFunction {
+
+    private double b;
+    private double m;
+
     public void create(double m, double b, double range, TableView<Coordinate> pointTable, XYChart.Series series) {
         ObservableList<Coordinate> dataPoints = FXCollections.observableArrayList();
         series.getData().clear();
@@ -26,12 +30,22 @@ public class LineareFunction {
         double x1 = one.getX();
 
         double m = (y2 - y1) / (x2 - x1);
+        this.m = m;
         // y-Achsenabschnitt b berechnen, indem man den Rest der Subtraktion, von y1
         // und dem Ergebnis der Multipplikation von m und x, berechnet
         double b = y1 - m * x1;
+        this.b = b;
         // Wenn b kleiner als 0 ist, dann soll das Vorzeichen von b angezeigt werden, statt dem +
         if (b < 0) return "f(x)=" + m + "*" + "x" + b;
 
         return "f(x)=" + m + "*" + "x" + "+" + b;
+    }
+
+    public double getM() {
+        return m;
+    }
+
+    public double getB() {
+        return b;
     }
 }
