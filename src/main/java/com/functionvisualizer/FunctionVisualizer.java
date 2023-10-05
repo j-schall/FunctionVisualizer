@@ -1,10 +1,8 @@
 package com.functionvisualizer;
 
 import com.functionvisualizer.functions.LineareFunction;
-import com.functionvisualizer.functions.SimpleQuadraticFunction;
 import javafx.application.Application;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
@@ -16,6 +14,8 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.gillius.jfxutils.chart.AxisConstraint;
@@ -29,7 +29,7 @@ import java.util.List;
 
 public class FunctionVisualizer extends Application {
 
-    public static XYChart.Series series;
+    public static XYChart.Series<Number, Number> series;
     private LineChart<Number, Number> coordinateSystem;
 
     private Window owner;
@@ -140,6 +140,8 @@ public class FunctionVisualizer extends Application {
 
         var valueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(1, 1000);
         rangeSpinner.setValueFactory(valueFactory);
+
+        coordinateTable.setOnMouseClicked(e -> markPoints(coordinateTable));
 
         /* Hier werden die Nodes der VBox hinzugefügt und angezeigt */
         VBox settingsSide = new VBox();
@@ -302,7 +304,7 @@ public class FunctionVisualizer extends Application {
         // Speichert die Funktionsgleichung
         final String[] func = new String[1];
         applyButton.setOnAction(e -> {
-            func[0] = sendToThread(textFields, formelArea, applyButton, visualizeButton, stage);
+            func[0] = visualizeCalculatedFunc(textFields, formelArea, applyButton, visualizeButton, stage);
             formelArea.setText(func[0]);
         });
 
@@ -311,7 +313,7 @@ public class FunctionVisualizer extends Application {
         stage.setScene(scene);
     }
 
-    private String sendToThread(List<TextField> textFields, TextArea area, Button button, Button button1, Stage stage) {
+    private String visualizeCalculatedFunc(List<TextField> textFields, TextArea area, Button button, Button button1, Stage stage) {
         List<Double> doubles = new ArrayList<>();
         LineareFunction function = new LineareFunction();
         try {
@@ -342,6 +344,27 @@ public class FunctionVisualizer extends Application {
             showError(AlertType.ERROR, owner, ex.toString(), "Zahlen konnten nicht formatiert werden!");
         }
         return null;
+    }
+
+    private void markPoints(TableView<Coordinate> table) {
+        // Schreibe Code, sodass wenn selectedCoor in der Tabelle ausgewählt wurde, dass dieser Punkt im Koordinatensystem markiert wird
+        List<XYChart.Data<Number, Number>> pointsToAdd = new ArrayList<>();
+        Coordinate selectedCoor = table.getItems().get(table.focusModelProperty().get().getFocusedIndex());
+
+        // Wenn mehrere Punkte markiert werden, werden diese wieder entfernt, damit immer nur einer angezeigt wird
+        series.getData().removeIf(data -> data.getNode() instanceof Circle);
+
+        for (XYChart.Data<Number, Number> value : series.getData()) {
+            if (value.getXValue().equals(selectedCoor.getX()) && value.getYValue().equals(selectedCoor.getY())) {
+                Circle circle = new Circle(5);
+                circle.setFill(Color.BLACK);
+                XYChart.Data<Number, Number> data = new XYChart.Data<>(selectedCoor.getX(), selectedCoor.getY());
+                data.setNode(circle);
+                pointsToAdd.add(data);
+            }
+        }
+        series.getData().addAll(pointsToAdd);
+        System.out.println(selectedCoor);
     }
 
     private void showError(AlertType type, Window owner, String title, String message) {
