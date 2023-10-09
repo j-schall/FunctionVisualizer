@@ -21,9 +21,7 @@ With this tool you can:
 
 3. Check that you have Java on your System with: ```java --version```
 <br>3.1. If it's not so, add the following repository to apt:<br>```sudo add-apt-repository ppa:openjdk-r/ppa```, <br>```sudo apt update```<br>
-
 3.2. Then install Java: ```sudo apt install openjdk-17-jre-headless```
-
 <br>3.3. Download the JavaFX runtime: ```sudo apt install openjfx``` <br>
    Or install manually <a href="https://gluonhq.com/products/javafx/">here<a>
 
