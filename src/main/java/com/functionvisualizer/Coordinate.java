@@ -4,8 +4,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ObservableValue;
 
 public class Coordinate {
-    private final SimpleDoubleProperty x;
-    private final SimpleDoubleProperty y;
+    private final SimpleDoubleProperty x, y;
 
     public Coordinate(double x, double y) {
         this.x = new SimpleDoubleProperty(x);

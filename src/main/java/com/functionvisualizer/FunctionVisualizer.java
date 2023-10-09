@@ -1,6 +1,7 @@
 package com.functionvisualizer;
 
-import com.functionvisualizer.functions.LineareFunction;
+import com.functionvisualizer.functions.Line;
+import com.functionvisualizer.functions.LinearFunction;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -44,6 +45,8 @@ public class FunctionVisualizer extends Application {
     public static double n;
     public static double range;
     private static final Button createFunctionButton = new Button("Erstellen");
+    private final Button backButton = new Button("Zurück");
+    private final Button applyButton = new Button("Bestätigen");
 
     @Override
     public void start(Stage stage) {
@@ -59,9 +62,11 @@ public class FunctionVisualizer extends Application {
         Menu optionMenu = new Menu("Optionen");
 
         MenuItem caluclateLineareFunctionItem = new MenuItem("Lineare Funktion berechnen");
+        MenuItem intersectionPointItem = new MenuItem("Schnittpunkt berechnen");
         caluclateLineareFunctionItem.setOnAction(e -> calculateFuncGUI(stage));
+        intersectionPointItem.setOnAction(e -> intersectionPointGUI(stage));
 
-        optionMenu.getItems().add(caluclateLineareFunctionItem);
+        optionMenu.getItems().addAll(caluclateLineareFunctionItem, intersectionPointItem);
         bar.getMenus().add(optionMenu);
 
 
@@ -270,8 +275,6 @@ public class FunctionVisualizer extends Application {
         VBox box = new VBox();
         scene = new Scene(box);
 
-        Button applyButton = new Button("Bestätigen");
-        Button backButton = new Button("Zurück");
         Button visualizeButton = new Button("Visualisieren");
 
         TextArea formelArea = new TextArea();
@@ -295,7 +298,7 @@ public class FunctionVisualizer extends Application {
         for (int row = 0; row < l; row++) {
             for (int col = 1; col < l + 1; col++) {
                 TextField field = new TextField();
-                field.setPromptText(fields[col/2]);
+                field.setPromptText(fields[col / 2]);
                 pane.add(field, row, col);
                 textFields.add(field);
             }
@@ -304,7 +307,7 @@ public class FunctionVisualizer extends Application {
         // Speichert die Funktionsgleichung
         final String[] func = new String[1];
         applyButton.setOnAction(e -> {
-            func[0] = visualizeCalculatedFunc(textFields, formelArea, applyButton, visualizeButton, stage);
+            func[0] = visualizeCalculatedFunc(textFields, applyButton, visualizeButton, stage);
             formelArea.setText(func[0]);
         });
 
@@ -313,9 +316,9 @@ public class FunctionVisualizer extends Application {
         stage.setScene(scene);
     }
 
-    private String visualizeCalculatedFunc(List<TextField> textFields, TextArea area, Button button, Button button1, Stage stage) {
+    private String visualizeCalculatedFunc(List<TextField> textFields, Button button, Button button1, Stage stage) {
         List<Double> doubles = new ArrayList<>();
-        LineareFunction function = new LineareFunction();
+        LinearFunction function = new LinearFunction();
         try {
             for (TextField tf : textFields) {
                 double num = Double.parseDouble(tf.getText());
@@ -364,7 +367,64 @@ public class FunctionVisualizer extends Application {
             }
         }
         series.getData().addAll(pointsToAdd);
-        System.out.println(selectedCoor);
+    }
+
+    private void intersectionPointGUI(Stage stage) {
+        GridPane pane = new GridPane();
+        VBox box = new VBox();
+        scene = new Scene(box);
+
+        Label func1Label = new Label("Funktion 1:");
+        Label func2Label = new Label("Funktion 2:");
+
+        TextArea intersectionArea = new TextArea();
+        intersectionArea.setPromptText("Schnittpunkt:");
+
+        int inset = 5;
+        GridPane.setMargin(backButton, new Insets(inset));
+        GridPane.setMargin(applyButton, new Insets(inset));
+        GridPane.setMargin(func1Label, new Insets(inset));
+        GridPane.setMargin(func2Label, new Insets(inset));
+
+        pane.add(backButton, 0, 0);
+        pane.add(func1Label, 0, 1);
+        pane.add(func2Label, 0, 2);
+        pane.add(applyButton, 0, 3);
+
+        String[] prompts = {"Steigung m", "y-Achsenabschnitt b"};
+        int l = prompts.length;
+        List<TextField> textFields = new ArrayList<>();
+        for (int row = 1; row < l + 1; row++) {
+            for (int col = 1; col < l + 1; col++) {
+                TextField field = new TextField();
+                field.setPromptText(prompts[col / 2]);
+                pane.add(field, col, row);
+                textFields.add(field);
+            }
+        }
+
+        VBox.setMargin(intersectionArea, new Insets(inset));
+        box.getChildren().addAll(pane, intersectionArea);
+
+        // Konvertiert die Daten aus den Textfeldern, zu Integern und werden, als Werte für zwei lineare Funktionen genutzt
+        applyButton.setOnAction(e -> {
+            List<Integer> data = new ArrayList<>();
+            for (TextField tf : textFields) {
+                String input = tf.getText();
+                int inputInt = Integer.parseInt(input);
+
+                data.add(inputInt);
+            }
+            LinearFunction func1 = new LinearFunction(data.get(0), data.get(1));
+            LinearFunction func2 = new LinearFunction(data.get(2), data.get(3));
+            Coordinate intersectionPoint = Line.INTERSECT(func1, func2);
+            
+            intersectionArea.setText("SP( " + intersectionPoint.getX() + " | " + intersectionPoint.getY() + " )");
+        });
+
+        backButton.setOnAction(e -> functionVisualizerGUI(stage));
+
+        stage.setScene(scene);
     }
 
     private void showError(AlertType type, Window owner, String title, String message) {

@@ -1,6 +1,6 @@
 package com.functionvisualizer;
 
-import com.functionvisualizer.functions.LineareFunction;
+import com.functionvisualizer.functions.LinearFunction;
 import com.functionvisualizer.functions.ProportionalFunction;
 import com.functionvisualizer.functions.SimpleQuadraticFunction;
 import javafx.application.Platform;
@@ -17,7 +17,7 @@ public class CalculationThread extends Thread {
         TableView<Coordinate> coordinateTable = FunctionVisualizer.coordinateTable;
         XYChart.Series series = FunctionVisualizer.series;
 
-        LineareFunction lFunc = new LineareFunction();
+        LinearFunction lFunc = new LinearFunction();
         ProportionalFunction pFunc = new ProportionalFunction();
         SimpleQuadraticFunction sqf = new SimpleQuadraticFunction();
 
