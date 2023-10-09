@@ -1,6 +1,6 @@
 package com.functionvisualizer.functions;
 
-import com.functionvisualizer.Coordinate;
+import com.functionvisualizer.attributs.Coordinate;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.chart.XYChart;

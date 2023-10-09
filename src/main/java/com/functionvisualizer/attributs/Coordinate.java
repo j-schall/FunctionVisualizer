@@ -1,4 +1,4 @@
-package com.functionvisualizer;
+package com.functionvisualizer.attributs;
 
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ObservableValue;

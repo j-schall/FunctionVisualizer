@@ -1,6 +1,7 @@
 package com.functionvisualizer;
 
-import com.functionvisualizer.functions.Line;
+import com.functionvisualizer.attributs.Coordinate;
+import com.functionvisualizer.attributs.Line;
 import com.functionvisualizer.functions.LinearFunction;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -25,16 +26,15 @@ import org.gillius.jfxutils.chart.AxisConstraintStrategy;
 import org.gillius.jfxutils.chart.ChartPanManager;
 import org.gillius.jfxutils.chart.JFXChartUtil;
 
+import java.sql.SQLOutput;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
 public class FunctionVisualizer extends Application {
-
     public static XYChart.Series<Number, Number> series;
     private LineChart<Number, Number> coordinateSystem;
-
-    private Window owner;
     private NumberAxis xAxis;
     private NumberAxis yAxis;
     private Spinner<Double> rangeSpinner;
@@ -68,7 +68,6 @@ public class FunctionVisualizer extends Application {
 
         optionMenu.getItems().addAll(caluclateLineareFunctionItem, intersectionPointItem);
         bar.getMenus().add(optionMenu);
-
 
         // Erstellung des Koordinatensystems
         xAxis = new NumberAxis();
@@ -172,9 +171,9 @@ public class FunctionVisualizer extends Application {
         String selectedItem = menuItem.getText();
         formelArea.setText("Formel: " + map.get(selectedItem));
 
-        boolean linFuncSel = map.containsKey(selectedItem) && selectedItem.contentEquals("lineare Funktion");
-        boolean propFuncSel = map.containsKey(selectedItem) && selectedItem.contentEquals("proportionale Funktion");
-        boolean quaFuncSel = map.containsKey(selectedItem) && selectedItem.contentEquals("einfache quadratische Funktion");
+        boolean linFuncSel = selectedItem.equals(map.keySet().toArray()[2]);
+        boolean propFuncSel = selectedItem.equals(map.keySet().toArray()[1]);
+        boolean quaFuncSel = selectedItem.equals(map.keySet().toArray()[0]);
 
         if (linFuncSel) {
             Platform.runLater(() -> bField.setDisable(false));
@@ -216,7 +215,7 @@ public class FunctionVisualizer extends Application {
     }
 
     private void handleFormatException(Exception e) {
-        owner = createFunctionButton.getScene().getWindow();
+        Window owner = createFunctionButton.getScene().getWindow();
         showError(AlertType.ERROR, owner, "Error: " + e, "Die angegebenen Zahlen konnten nicht formatiert werden. " +
                 "Bitte überprüfen Sie die Zahlen.");
     }

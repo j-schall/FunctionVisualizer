@@ -1,6 +1,7 @@
-package com.functionvisualizer.functions;
+package com.functionvisualizer.attributs;
 
-import com.functionvisualizer.Coordinate;
+import com.functionvisualizer.attributs.Coordinate;
+import com.functionvisualizer.functions.LinearFunction;
 
 public class Line {
     public static Coordinate INTERSECT(LinearFunction func1, LinearFunction func2) {

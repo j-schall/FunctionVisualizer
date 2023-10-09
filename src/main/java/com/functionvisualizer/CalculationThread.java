@@ -1,5 +1,6 @@
 package com.functionvisualizer;
 
+import com.functionvisualizer.attributs.Coordinate;
 import com.functionvisualizer.functions.LinearFunction;
 import com.functionvisualizer.functions.ProportionalFunction;
 import com.functionvisualizer.functions.SimpleQuadraticFunction;
