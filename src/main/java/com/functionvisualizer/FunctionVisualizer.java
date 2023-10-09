@@ -3,6 +3,7 @@ package com.functionvisualizer;
 import com.functionvisualizer.functions.Line;
 import com.functionvisualizer.functions.LinearFunction;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
@@ -42,7 +43,6 @@ public class FunctionVisualizer extends Application {
     public static int funcIndex;
     public static double m;
     public static double b;
-    public static double n;
     public static double range;
     private static final Button createFunctionButton = new Button("Erstellen");
     private final Button backButton = new Button("Zurück");
@@ -118,8 +118,7 @@ public class FunctionVisualizer extends Application {
             menu.setText(func);
             functionTypButton.getItems().add(menu);
 
-            menu.setOnAction(e -> handleMenuItemSelected(menu, funktionen, formelArea,
-                    createFunctionButton, mField, bField));
+            menu.setOnAction(e -> handleMenuItemSelected(menu, funktionen, formelArea, mField, bField));
         }
 
         functionTypButton.setText("Funktionstyp");
@@ -143,10 +142,10 @@ public class FunctionVisualizer extends Application {
         rangeSpinner = new Spinner<>();
         rangeSpinner.setEditable(true);
 
-        var valueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(1, 1000);
+        var valueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(1, Integer.MAX_VALUE);
         rangeSpinner.setValueFactory(valueFactory);
 
-        coordinateTable.setOnMouseClicked(e -> markPoints(coordinateTable));
+        coordinateTable.setOnMouseClicked(e -> highlightPoints(coordinateTable));
 
         /* Hier werden die Nodes der VBox hinzugefügt und angezeigt */
         VBox settingsSide = new VBox();
@@ -169,82 +168,57 @@ public class FunctionVisualizer extends Application {
         stage.show();
     }
 
-    private void handleMenuItemSelected(MenuItem menuItem, HashMap<String, String> map, Label formelArea, Button button,
-                                        TextField mField, TextField bField) {
-
+    private void handleMenuItemSelected(MenuItem menuItem, HashMap<String, String> map, Label formelArea, TextField mField, TextField bField) {
         String selectedItem = menuItem.getText();
         formelArea.setText("Formel: " + map.get(selectedItem));
 
-        if (map.containsKey(selectedItem) && selectedItem.contentEquals("proportionale Funktion")) {
-            bField.setDisable(true);
-            button.setOnMouseClicked(e -> {
-                try {
-                    range = rangeSpinner.getValue();
-                    m = Double.parseDouble(mField.getText());
+        boolean linFuncSel = map.containsKey(selectedItem) && selectedItem.contentEquals("lineare Funktion");
+        boolean propFuncSel = map.containsKey(selectedItem) && selectedItem.contentEquals("proportionale Funktion");
+        boolean quaFuncSel = map.containsKey(selectedItem) && selectedItem.contentEquals("einfache quadratische Funktion");
 
-                    xAxis.setLowerBound(-range);
-                    xAxis.setUpperBound(range);
-                    yAxis.setLowerBound(-range);
-                    yAxis.setUpperBound(range);
-
-                    funcIndex = 1;
-                    CalculationThread thread = new CalculationThread();
-                    //System.out.println(thread.calculateLineareFunction(new Coordinate(-1, -6), new Coordinate(3.5, -1.5)));
-                    thread.start();
-                } catch (NumberFormatException exception) {
-                    owner = button.getScene().getWindow();
-                    showError(AlertType.ERROR, owner, "Error: " + exception,
-                            "Die angegebenen Zahlen konnten nicht formatiert werden. " +
-                                    "Bitte überprüfen Sie die Zahlen.");
-                }
-            });
-        } else if (map.containsKey(selectedItem) && selectedItem.contentEquals("lineare Funktion")) {
-            bField.setDisable(false);
-            button.setOnMouseClicked(e -> {
-                try {
-                    range = rangeSpinner.getValue();
-                    m = Double.parseDouble(mField.getText());
-                    b = Double.parseDouble(bField.getText());
-
-                    xAxis.setLowerBound(-range);
-                    xAxis.setUpperBound(range);
-                    yAxis.setLowerBound(-range);
-                    yAxis.setUpperBound(range);
-
-                    funcIndex = 2;
-                    CalculationThread thread = new CalculationThread();
-                    thread.start();
-                } catch (NumberFormatException exception) {
-                    owner = button.getScene().getWindow();
-                    showError(AlertType.ERROR, owner, "Error: " + exception,
-                            "Die angegebenen Zahlen konnten nicht formatiert werden. " +
-                                    "Bitte überprüfen Sie die Zahlen.");
-                }
-            });
-        } else if (map.containsKey(selectedItem) && selectedItem.contentEquals("einfache quadratische Funktion")) {
-            bField.setDisable(true);
-            mField.setPromptText("n");
-            button.setOnMouseClicked(e -> {
-                try {
-                    range = rangeSpinner.getValue();
-                    n = Double.parseDouble(mField.getText());
-
-                    xAxis.setLowerBound(-range);
-                    xAxis.setUpperBound(range);
-                    yAxis.setLowerBound(-range);
-                    yAxis.setUpperBound(range);
-
-                    funcIndex = 3;
-                    CalculationThread thread = new CalculationThread();
-                    thread.start();
-                } catch (NumberFormatException exception) {
-                    owner = button.getScene().getWindow();
-                    showError(AlertType.ERROR, owner, "Error: " + exception,
-                            "Die angegebenen Zahlen konnten nicht formatiert werden. " +
-                                    "Bitte überprüfen Sie die Zahlen.");
-                }
-            });
+        if (linFuncSel) {
+            Platform.runLater(() -> bField.setDisable(false));
+        } else {
+            Platform.runLater(() -> bField.setDisable(true));
         }
+
+        createFunctionButton.setOnMouseClicked(e -> {
+            try {
+                if (propFuncSel) {
+                    setCoordinateSystemBound(mField, 1);
+                } else if (linFuncSel) {
+                    setCoordinateSystemBound(mField, 2, Double.parseDouble(bField.getText()));
+                } else if (quaFuncSel) {
+                    setCoordinateSystemBound(mField, 3);
+                }
+            } catch (NumberFormatException ex) {
+                handleFormatException(ex);
+            }
+        });
+    }
+
+    private void setCoordinateSystemBound(TextField mField, int index, double... bValue) throws NumberFormatException {
+        range = rangeSpinner.getValue();
+
+        // Überprüft, ob es sich um eine quadratische Funktion handelt, sodass statt Steigung m n benutzt wird
+        if (index == 2) b = bValue[0];
+
+        m = Double.parseDouble(mField.getText());
+
+        xAxis.setLowerBound(-range);
+        xAxis.setUpperBound(range);
+        yAxis.setLowerBound(-range);
+        yAxis.setUpperBound(range);
+
+        funcIndex = index;
+        CalculationThread thread = new CalculationThread();
+        thread.start();
+    }
+
+    private void handleFormatException(Exception e) {
+        owner = createFunctionButton.getScene().getWindow();
+        showError(AlertType.ERROR, owner, "Error: " + e, "Die angegebenen Zahlen konnten nicht formatiert werden. " +
+                "Bitte überprüfen Sie die Zahlen.");
     }
 
     private void zoomIn(MouseEvent e) {
@@ -258,6 +232,7 @@ public class FunctionVisualizer extends Application {
                 mouseEvent.consume();
             }
         });
+
         AxisConstraintStrategy strategies = chartInputContext -> AxisConstraint.Both;
         panner.setAxisConstraintStrategy(strategies);
         panner.start();
@@ -312,7 +287,6 @@ public class FunctionVisualizer extends Application {
         });
 
         backButton.setOnAction(e -> functionVisualizerGUI(stage));
-
         stage.setScene(scene);
     }
 
@@ -349,7 +323,7 @@ public class FunctionVisualizer extends Application {
         return null;
     }
 
-    private void markPoints(TableView<Coordinate> table) {
+    private void highlightPoints(TableView<Coordinate> table) {
         // Schreibe Code, sodass wenn selectedCoor in der Tabelle ausgewählt wurde, dass dieser Punkt im Koordinatensystem markiert wird
         List<XYChart.Data<Number, Number>> pointsToAdd = new ArrayList<>();
         Coordinate selectedCoor = table.getItems().get(table.focusModelProperty().get().getFocusedIndex());
@@ -406,25 +380,27 @@ public class FunctionVisualizer extends Application {
         VBox.setMargin(intersectionArea, new Insets(inset));
         box.getChildren().addAll(pane, intersectionArea);
 
-        // Konvertiert die Daten aus den Textfeldern, zu Integern und werden, als Werte für zwei lineare Funktionen genutzt
-        applyButton.setOnAction(e -> {
-            List<Integer> data = new ArrayList<>();
-            for (TextField tf : textFields) {
-                String input = tf.getText();
-                int inputInt = Integer.parseInt(input);
-
-                data.add(inputInt);
-            }
-            LinearFunction func1 = new LinearFunction(data.get(0), data.get(1));
-            LinearFunction func2 = new LinearFunction(data.get(2), data.get(3));
-            Coordinate intersectionPoint = Line.INTERSECT(func1, func2);
-            
-            intersectionArea.setText("SP( " + intersectionPoint.getX() + " | " + intersectionPoint.getY() + " )");
-        });
-
+        applyButton.setOnAction(e -> parseInputToFunction(textFields, intersectionArea));
         backButton.setOnAction(e -> functionVisualizerGUI(stage));
 
         stage.setScene(scene);
+    }
+
+    private void parseInputToFunction(List<TextField> textFields, TextArea area) {
+        // Konvertiert die Daten aus den Textfeldern, zu Integern und werden, als Werte für zwei lineare Funktionen genutzt
+        List<Integer> data = new ArrayList<>();
+
+        for (TextField tf : textFields) {
+            String input = tf.getText();
+            int inputInt = Integer.parseInt(input);
+
+            data.add(inputInt);
+        }
+        LinearFunction func1 = new LinearFunction(data.get(0), data.get(1));
+        LinearFunction func2 = new LinearFunction(data.get(2), data.get(3));
+        Coordinate intersectionPoint = Line.INTERSECT(func1, func2);
+
+        area.setText("SP( " + intersectionPoint.getX() + " | " + intersectionPoint.getY() + " )");
     }
 
     private void showError(AlertType type, Window owner, String title, String message) {
@@ -435,6 +411,4 @@ public class FunctionVisualizer extends Application {
         alert.setTitle(title);
         alert.show();
     }
-
 }
-

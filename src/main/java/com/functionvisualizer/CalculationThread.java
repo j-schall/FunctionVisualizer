@@ -13,7 +13,6 @@ public class CalculationThread extends Thread {
         double range = FunctionVisualizer.range;
         double m = FunctionVisualizer.m;
         double b = FunctionVisualizer.b;
-        double n = FunctionVisualizer.n;
         TableView<Coordinate> coordinateTable = FunctionVisualizer.coordinateTable;
         XYChart.Series series = FunctionVisualizer.series;
 
@@ -31,7 +30,7 @@ public class CalculationThread extends Thread {
                     lFunc.create(m, b, range, coordinateTable, series);
                     break;
                 case 3:
-                    sqf.create(n, range, coordinateTable, series);
+                    sqf.create(m, range, coordinateTable, series);
                     break;
             }
         });
