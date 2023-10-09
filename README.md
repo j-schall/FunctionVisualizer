@@ -9,12 +9,12 @@ With this tool you can:
 </ul>
 
 ## Installation Guide
-# Windows
+### Windows
 1. Go to realises and download the FunctionVisualizer_v.1.1.zip folder
 2. Extract the downloaded ZIP folder
 3. Double click on the *.exe file and start the programm
 
-# Other Systems
+### Other Systems
 1. Go to realises and download the FunctionVisualizer_jar.zip folder
 2. Extract the JAR on your system
 3. Download the JavaFX runtime:
