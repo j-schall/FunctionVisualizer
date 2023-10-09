@@ -1,17 +1,28 @@
 # FunctionVisualizer
-<img width="626" alt="Screenshot 2023-08-08 183612" src="https://github.com/j-schall/FunctionVisualizer/assets/122560931/4e99bce0-0f45-4c96-870e-4e75cd3791da">
-
-With this tool you can visualize, test and calculate functions.
-In addition the programm helps you to visualize mathematical functions like linear or proportional functions. In 
-the v1.0.0-alpha release are only this functions above available, but in the future more function will 
-be supported. 
+![Screenshot 2023-10-05 134725](https://github.com/j-schall/FunctionVisualizer/assets/122560931/b817465a-6633-4cf6-9443-115d89c2b022)
+With this tool you can:
+<ul>
+  <li>Visualize linear, propotional and quadratic functions</li>
+  <li>Calculate intersections of two linear functions (Linear Equation Systems)</li>
+  <li>Calculate linear functions with the help of two given points</li>
+  <li>Highlight points in the coordinatesystem</li>
+</ul>
 
 ## Installation Guide
-If you like to test the programm than can click on the right side under releases, click of the first one and download 
-the MSI installer. After the file has been downloaded open the installer and go through the setup. 
-After the setup is finished you can open the programm. 
+#Windows
+1. Go to realises and download the FunctionVisualizer_v.1.1.zip folder
+2. Extract the downloaded ZIP folder
+3. Double click on the *.exe file and start the programm
 
-*Linux and MacOS aren't yet supported, but this will be fixed in the future. 
+#Other Systems
+1. Go to realises and download the FunctionVisualizer_jar.zip folder
+2. Extract the JAR on your system
+3. Download the JavaFX runtime:
+   With apt:
+   ```sudo apt install openjfx```
+   Or install manually <a href="https://gluonhq.com/products/javafx/">here<a>
+
+4. 
 
 ## When you have problems, please inform me under the menuitem "issues".
 
