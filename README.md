@@ -14,7 +14,7 @@ With this tool you can:
 2. Extract the downloaded ZIP folder
 3. Double click on the *.exe file and start the programm
 
-### Other Systems
+### Linux
 1. Go to realises and download the FunctionVisualizer_jar.zip folder
 
 2. Extract the JAR on your system
