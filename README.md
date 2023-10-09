@@ -20,7 +20,7 @@ With this tool you can:
 3. Download the JavaFX runtime:
    With apt:
    ```sudo apt install openjfx```
-   Or install manually <a href="https://gluonhq.com/products/javafx/">here<a>
+   <br>Or install manually <a href="https://gluonhq.com/products/javafx/">here<a><br>
 
 4. 
 
