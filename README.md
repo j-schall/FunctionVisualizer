@@ -18,7 +18,7 @@ With this tool you can:
 1. Go to realises and download the FunctionVisualizer_jar.zip folder
 2. Extract the JAR on your system
 3. Check that you have Java on your System with: ```java --version```
-3.1. If it's not so, add the following repository to apt: <br>```sudo add-apt-repository ppa:openjdk-r/ppa```<br>, <br>```sudo apt update```<br>
+<br>3.1. If it's not so, add the following repository to apt:<br> <br>```sudo add-apt-repository ppa:openjdk-r/ppa```<br>, <br>```sudo apt update```<br>
 3.2. Then install Java: ```sudo apt install openjdk-17-jre-headless```
 4. Download the JavaFX runtime: ```sudo apt install openjfx```
    <br>Or install manually <a href="https://gluonhq.com/products/javafx/">here<a><br>
