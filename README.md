@@ -17,9 +17,7 @@ With this tool you can:
 ### Other Systems
 1. Go to realises and download the FunctionVisualizer_jar.zip folder
 2. Extract the JAR on your system
-3. Download the JavaFX runtime:
-   With apt:
-   ```sudo apt install openjfx```
+3. Download the JavaFX runtime: ```sudo apt install openjfx```
    <br>Or install manually <a href="https://gluonhq.com/products/javafx/">here<a><br>
 
 4. 
