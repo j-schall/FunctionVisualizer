@@ -184,11 +184,11 @@ public class FunctionVisualizer extends Application {
         createFunctionButton.setOnMouseClicked(e -> {
             try {
                 if (propFuncSel) {
-                    setCORDINATE_SYSTEMBound(mField, 1);
+                    setCoordinateSystemBound(mField, 1);
                 } else if (linFuncSel) {
-                    setCORDINATE_SYSTEMBound(mField, 2, Double.parseDouble(bField.getText()));
+                    setCoordinateSystemBound(mField, 2, Double.parseDouble(bField.getText()));
                 } else if (quaFuncSel) {
-                    setCORDINATE_SYSTEMBound(mField, 3);
+                    setCoordinateSystemBound(mField, 3);
                 }
             } catch (NumberFormatException ex) {
                 handleFormatException(ex);
@@ -196,7 +196,7 @@ public class FunctionVisualizer extends Application {
         });
     }
 
-    private void setCORDINATE_SYSTEMBound(TextField mField, int index, double... bValue) throws NumberFormatException {
+    private void setCoordinateSystemBound(TextField mField, int index, double... bValue) throws NumberFormatException {
         RANGE = RANGE_SPINNER.getValue();
 
         // Überprüft, ob es sich um eine quadratische Funktion handelt, sodass statt Steigung m n benutzt wird
