@@ -18,7 +18,7 @@ public class LinearFunction {
         this.b = b;
     }
 
-    public void create(double m, double b, double range, TableView<Coordinate> pointTable, XYChart.Series series) {
+    public void create(double m, double b, double range, TableView<Coordinate> pointTable, XYChart.Series<Number, Number> series) {
         ObservableList<Coordinate> dataPoints = FXCollections.observableArrayList();
         series.getData().clear();
         for (double x = -range; x <= range; x++) { //Variable range definiert die Länge des Graphen

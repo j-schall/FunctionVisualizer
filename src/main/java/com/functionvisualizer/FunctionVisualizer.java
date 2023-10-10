@@ -6,6 +6,7 @@ import com.functionvisualizer.functions.LinearFunction;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
@@ -26,24 +27,22 @@ import org.gillius.jfxutils.chart.AxisConstraintStrategy;
 import org.gillius.jfxutils.chart.ChartPanManager;
 import org.gillius.jfxutils.chart.JFXChartUtil;
 
-import java.sql.SQLOutput;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
 public class FunctionVisualizer extends Application {
-    public static XYChart.Series<Number, Number> series;
-    private LineChart<Number, Number> coordinateSystem;
-    private NumberAxis xAxis;
-    private NumberAxis yAxis;
-    private Spinner<Double> rangeSpinner;
-    public static TableView<Coordinate> coordinateTable;
-    private Scene scene;
-    public static int funcIndex;
-    public static double m;
-    public static double b;
-    public static double range;
+    public static XYChart.Series<Number, Number> SERIES;
+    private LineChart<Number, Number> COORDINATE_SYSTEM;
+    private NumberAxis X_AXIS;
+    private NumberAxis Y_AXIS;
+    private Spinner<Double> RANGE_SPINNER;
+    public static TableView<Coordinate> COORDINATE_TABLE;
+    private Scene SCENE;
+    public static int FUNCTION_INDEX;
+    public static double M;
+    public static double B;
+    public static double RANGE;
     private static final Button createFunctionButton = new Button("Erstellen");
     private final Button backButton = new Button("Zurück");
     private final Button applyButton = new Button("Bestätigen");
@@ -55,7 +54,7 @@ public class FunctionVisualizer extends Application {
 
     private void functionVisualizerGUI(Stage stage) {
         BorderPane root = new BorderPane();
-        scene = new Scene(root, 840, 450);
+        SCENE = new Scene(root, 840, 450);
 
         // MenuBar erstellen, um verschiedene Berechnungen durchzuführen
         MenuBar bar = new MenuBar();
@@ -63,27 +62,28 @@ public class FunctionVisualizer extends Application {
 
         MenuItem caluclateLineareFunctionItem = new MenuItem("Lineare Funktion berechnen");
         MenuItem intersectionPointItem = new MenuItem("Schnittpunkt berechnen");
-        caluclateLineareFunctionItem.setOnAction(e -> calculateFuncGUI(stage));
-        intersectionPointItem.setOnAction(e -> intersectionPointGUI(stage));
 
         optionMenu.getItems().addAll(caluclateLineareFunctionItem, intersectionPointItem);
         bar.getMenus().add(optionMenu);
 
+        caluclateLineareFunctionItem.setOnAction(e -> calculateFuncGUI(stage));
+        intersectionPointItem.setOnAction(e -> intersectionPointGUI(stage));
+
         // Erstellung des Koordinatensystems
-        xAxis = new NumberAxis();
-        xAxis.setLabel("x");
-        xAxis.setAutoRanging(false);
+        X_AXIS = new NumberAxis();
+        X_AXIS.setLabel("x");
+        X_AXIS.setAutoRanging(false);
 
-        yAxis = new NumberAxis();
-        yAxis.setLabel("y");
-        yAxis.setUpperBound(100);
-        yAxis.setLowerBound(100);
+        Y_AXIS = new NumberAxis();
+        Y_AXIS.setLabel("y");
+        Y_AXIS.setUpperBound(100);
+        Y_AXIS.setLowerBound(100);
 
-        series = new XYChart.Series<>();
-        series.setName("Punkte");
-        coordinateSystem = new LineChart<>(xAxis, yAxis);
-        coordinateSystem.getData().add(series);
-        coordinateSystem.autosize();
+        SERIES = new XYChart.Series<>();
+        SERIES.setName("Punkte");
+        COORDINATE_SYSTEM = new LineChart<>(X_AXIS, Y_AXIS);
+        COORDINATE_SYSTEM.getData().add(SERIES);
+        COORDINATE_SYSTEM.autosize();
 
         // TextField wird erstellt, um die Steigung einzutragen
         var mField = new TextField();
@@ -97,7 +97,7 @@ public class FunctionVisualizer extends Application {
         bField.setDisable(true);
 
         // Die Methode zoomIn() wird aufgerufen, um in das Koordinatensytem zu zoomen
-        coordinateSystem.setOnMouseClicked(this::zoomIn);
+        COORDINATE_SYSTEM.setOnMouseClicked(this::zoomIn);
 
         // Hier werden die Formelnamen mit den entsprechenden Formeln gespeichert
         HashMap<String, String> funktionen = new HashMap<>();
@@ -125,26 +125,26 @@ public class FunctionVisualizer extends Application {
         BorderPane.setMargin(functionTypButton, new Insets(20));
 
         // Tabelle + Tabellenspalten werden erstellt, die die Inhalte von der Klasse Coordinate enthalten
-        coordinateTable = new TableView<>();
-        coordinateTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        COORDINATE_TABLE = new TableView<>();
+        COORDINATE_TABLE.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         TableColumn<Coordinate, Double> xColumn = new TableColumn<>("x");
         xColumn.setCellValueFactory(data -> data.getValue().xProperty());
 
         TableColumn<Coordinate, Double> yColumn = new TableColumn<>("y");
         yColumn.setCellValueFactory(data -> data.getValue().yProperty());
-        coordinateTable.getColumns().addAll(xColumn, yColumn);
+        COORDINATE_TABLE.getColumns().addAll(xColumn, yColumn);
 
         // Spinner wird erstellt, um die Länge des Graphen einzustellen
         var infoLabel = new Label("Wert für x:");
 
-        rangeSpinner = new Spinner<>();
-        rangeSpinner.setEditable(true);
+        RANGE_SPINNER = new Spinner<>();
+        RANGE_SPINNER.setEditable(true);
 
         var valueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(1, Integer.MAX_VALUE);
-        rangeSpinner.setValueFactory(valueFactory);
+        RANGE_SPINNER.setValueFactory(valueFactory);
 
-        coordinateTable.setOnMouseClicked(e -> highlightPoints(coordinateTable));
+        COORDINATE_TABLE.setOnMouseClicked(e -> highlightPoints(COORDINATE_TABLE));
 
         /* Hier werden die Nodes der VBox hinzugefügt und angezeigt */
         VBox settingsSide = new VBox();
@@ -154,15 +154,15 @@ public class FunctionVisualizer extends Application {
                 mField,
                 bField,
                 infoLabel,
-                rangeSpinner,
+                RANGE_SPINNER,
                 createFunctionButton,
-                coordinateTable);
+                COORDINATE_TABLE);
 
         root.setTop(bar);
-        root.setLeft(coordinateSystem);
+        root.setLeft(COORDINATE_SYSTEM);
         root.setRight(settingsSide);
 
-        stage.setScene(scene);
+        stage.setScene(SCENE);
         stage.setTitle("Function Visualisation");
         stage.show();
     }
@@ -184,11 +184,11 @@ public class FunctionVisualizer extends Application {
         createFunctionButton.setOnMouseClicked(e -> {
             try {
                 if (propFuncSel) {
-                    setCoordinateSystemBound(mField, 1);
+                    setCORDINATE_SYSTEMBound(mField, 1);
                 } else if (linFuncSel) {
-                    setCoordinateSystemBound(mField, 2, Double.parseDouble(bField.getText()));
+                    setCORDINATE_SYSTEMBound(mField, 2, Double.parseDouble(bField.getText()));
                 } else if (quaFuncSel) {
-                    setCoordinateSystemBound(mField, 3);
+                    setCORDINATE_SYSTEMBound(mField, 3);
                 }
             } catch (NumberFormatException ex) {
                 handleFormatException(ex);
@@ -196,20 +196,20 @@ public class FunctionVisualizer extends Application {
         });
     }
 
-    private void setCoordinateSystemBound(TextField mField, int index, double... bValue) throws NumberFormatException {
-        range = rangeSpinner.getValue();
+    private void setCORDINATE_SYSTEMBound(TextField mField, int index, double... bValue) throws NumberFormatException {
+        RANGE = RANGE_SPINNER.getValue();
 
         // Überprüft, ob es sich um eine quadratische Funktion handelt, sodass statt Steigung m n benutzt wird
-        if (index == 2) b = bValue[0];
+        if (index == 2) B = bValue[0];
 
-        m = Double.parseDouble(mField.getText());
+        M = Double.parseDouble(mField.getText());
 
-        xAxis.setLowerBound(-range);
-        xAxis.setUpperBound(range);
-        yAxis.setLowerBound(-range);
-        yAxis.setUpperBound(range);
+        X_AXIS.setLowerBound(-RANGE);
+        X_AXIS.setUpperBound(RANGE);
+        Y_AXIS.setLowerBound(-RANGE);
+        Y_AXIS.setUpperBound(RANGE);
 
-        funcIndex = index;
+        FUNCTION_INDEX = index;
         CalculationThread thread = new CalculationThread();
         thread.start();
     }
@@ -222,12 +222,11 @@ public class FunctionVisualizer extends Application {
 
     private void zoomIn(MouseEvent e) {
         // Das Dependency jfxutils, macht das der LineChart verändert werden kann
-        ChartPanManager panner = new ChartPanManager(coordinateSystem);
+        ChartPanManager panner = new ChartPanManager(COORDINATE_SYSTEM);
         //Wenn der rechte Mousebutton gedrückt wurde, verschiebt man das Sichtfeld des Koordinatensytsems
         panner.setMouseFilter(mouseEvent -> {
-            if (mouseEvent.getButton() == MouseButton.PRIMARY) {
-                // Lässt es durchgehen
-            } else {
+            boolean isPressed = mouseEvent.getButton() == MouseButton.PRIMARY || mouseEvent.getButton() == MouseButton.SECONDARY;
+            if (!isPressed) {
                 mouseEvent.consume();
             }
         });
@@ -237,7 +236,7 @@ public class FunctionVisualizer extends Application {
         panner.start();
 
         // Wenn man die rechte Maustaste gedrückt hält, wird ein Rechteck gezeichnet, um an die gewünschte Stelle zu zoomen
-        JFXChartUtil.setupZooming(coordinateSystem, mouseEvent -> {
+        JFXChartUtil.setupZooming(COORDINATE_SYSTEM, mouseEvent -> {
             if (mouseEvent.getButton() != MouseButton.SECONDARY) // Zoomen wird getriggert, wenn man die secondäre Maustaste gedrückt hat
                 mouseEvent.consume();
         });
@@ -247,7 +246,7 @@ public class FunctionVisualizer extends Application {
         // UI
         GridPane pane = new GridPane();
         VBox box = new VBox();
-        scene = new Scene(box);
+        SCENE = new Scene(box);
 
         Button visualizeButton = new Button("Visualisieren");
 
@@ -260,23 +259,16 @@ public class FunctionVisualizer extends Application {
         pane.add(formelArea, 1, 4);
         box.getChildren().addAll(pane, formelArea, visualizeButton);
 
-        int inset = 10;
-        VBox.setMargin(formelArea, new Insets(inset));
-        VBox.setMargin(visualizeButton, new Insets(inset));
-        VBox.setMargin(pane, new Insets(inset));
+        Insets inset = new Insets(10);
+        VBox.setMargin(formelArea, inset);
+        VBox.setMargin(visualizeButton, inset);
+        VBox.setMargin(pane, inset);
 
         // Erstellung der Textfelder, um die Daten des Benutzers in die Coordinate Klasse zu integrieren
         String[] fields = {"x-Koordinate", "y-Koordinate"};
-        int l = fields.length;
         List<TextField> textFields = new ArrayList<>();
-        for (int row = 0; row < l; row++) {
-            for (int col = 1; col < l + 1; col++) {
-                TextField field = new TextField();
-                field.setPromptText(fields[col / 2]);
-                pane.add(field, row, col);
-                textFields.add(field);
-            }
-        }
+
+        makeGrid(fields, textFields, pane, 0, true);
 
         // Speichert die Funktionsgleichung
         final String[] func = new String[1];
@@ -286,7 +278,23 @@ public class FunctionVisualizer extends Application {
         });
 
         backButton.setOnAction(e -> functionVisualizerGUI(stage));
-        stage.setScene(scene);
+        stage.setScene(SCENE);
+    }
+
+    // Erstellt automatisch ein Raster aus TextFeldern
+    private void makeGrid(Object[] o, List<TextField> fields, GridPane pane, int rowCount, boolean promptText) {
+        int l = o.length;
+
+        for (int row = rowCount; row < l + rowCount; row++) {
+            for (int col = 1; col < l + 1; col++) {
+                TextField field = new TextField();
+                if (promptText) {
+                    field.setPromptText(o[col / 2].toString());
+                }
+                pane.add(field, row, col);
+                fields.add(field);
+            }
+        }
     }
 
     private String visualizeCalculatedFunc(List<TextField> textFields, Button button, Button button1, Stage stage) {
@@ -301,23 +309,20 @@ public class FunctionVisualizer extends Application {
                     Coordinate coordinate1 = new Coordinate(doubles.get(0), doubles.get(1));
                     Coordinate coordinate2 = new Coordinate(doubles.get(2), doubles.get(3));
 
-                    String func = function.calculateLineareFunction(coordinate1, coordinate2);
-
                     // Die Funktion, welche berechnet wurde, wird in dem Koordinatensystem veranschaulicht
                     button1.setOnAction(e -> {
                         double m = function.getM();
                         double b = function.getB();
 
                         functionVisualizerGUI(stage);
-                        function.create(m, b, coordinate1.getX(), coordinateTable, series);
+                        function.create(m, b, coordinate1.getX(), COORDINATE_TABLE, SERIES);
                     });
 
-                    return func;
+                    return function.calculateLineareFunction(coordinate1, coordinate2);
                 }
             }
         } catch (NumberFormatException | IndexOutOfBoundsException ex) {
-            Window owner = button.getScene().getWindow();
-            showError(AlertType.ERROR, owner, ex.toString(), "Zahlen konnten nicht formatiert werden!");
+            handleFormatException(ex);
         }
         return null;
     }
@@ -328,9 +333,9 @@ public class FunctionVisualizer extends Application {
         Coordinate selectedCoor = table.getItems().get(table.focusModelProperty().get().getFocusedIndex());
 
         // Wenn mehrere Punkte markiert werden, werden diese wieder entfernt, damit immer nur einer angezeigt wird
-        series.getData().removeIf(data -> data.getNode() instanceof Circle);
+        SERIES.getData().removeIf(data -> data.getNode() instanceof Circle);
 
-        for (XYChart.Data<Number, Number> value : series.getData()) {
+        for (XYChart.Data<Number, Number> value : SERIES.getData()) {
             if (value.getXValue().equals(selectedCoor.getX()) && value.getYValue().equals(selectedCoor.getY())) {
                 Circle circle = new Circle(5);
                 circle.setFill(Color.BLACK);
@@ -339,13 +344,13 @@ public class FunctionVisualizer extends Application {
                 pointsToAdd.add(data);
             }
         }
-        series.getData().addAll(pointsToAdd);
+        SERIES.getData().addAll(pointsToAdd);
     }
 
     private void intersectionPointGUI(Stage stage) {
         GridPane pane = new GridPane();
         VBox box = new VBox();
-        scene = new Scene(box);
+        SCENE = new Scene(box);
 
         Label func1Label = new Label("Funktion 1:");
         Label func2Label = new Label("Funktion 2:");
@@ -353,39 +358,29 @@ public class FunctionVisualizer extends Application {
         TextArea intersectionArea = new TextArea();
         intersectionArea.setPromptText("Schnittpunkt:");
 
-        int inset = 5;
-        GridPane.setMargin(backButton, new Insets(inset));
-        GridPane.setMargin(applyButton, new Insets(inset));
-        GridPane.setMargin(func1Label, new Insets(inset));
-        GridPane.setMargin(func2Label, new Insets(inset));
-
-        pane.add(backButton, 0, 0);
-        pane.add(func1Label, 0, 1);
-        pane.add(func2Label, 0, 2);
-        pane.add(applyButton, 0, 3);
-
-        String[] prompts = {"Steigung m", "y-Achsenabschnitt b"};
-        int l = prompts.length;
-        List<TextField> textFields = new ArrayList<>();
-        for (int row = 1; row < l + 1; row++) {
-            for (int col = 1; col < l + 1; col++) {
-                TextField field = new TextField();
-                field.setPromptText(prompts[col / 2]);
-                pane.add(field, col, row);
-                textFields.add(field);
-            }
+        Insets inset = new Insets(5);
+        int col = 0;
+        Node[] nodes = {backButton, func1Label, func2Label, applyButton};
+        for (Node node : nodes) {
+            GridPane.setMargin(node, inset);
+            pane.add(node, 0, col);
+            col += 1;
         }
 
-        VBox.setMargin(intersectionArea, new Insets(inset));
+        String[] prompts = {"Steigung m", "y-Achsenabschnitt b"};
+        List<TextField> textFields = new ArrayList<>();
+        makeGrid(prompts, textFields, pane, 1,true);
+
+        VBox.setMargin(intersectionArea, inset);
         box.getChildren().addAll(pane, intersectionArea);
 
-        applyButton.setOnAction(e -> parseInputToFunction(textFields, intersectionArea));
+        applyButton.setOnAction(e -> parseInputToIntersectionPoint(textFields, intersectionArea));
         backButton.setOnAction(e -> functionVisualizerGUI(stage));
 
-        stage.setScene(scene);
+        stage.setScene(SCENE);
     }
 
-    private void parseInputToFunction(List<TextField> textFields, TextArea area) {
+    private void parseInputToIntersectionPoint(List<TextField> textFields, TextArea area) {
         // Konvertiert die Daten aus den Textfeldern, zu Integern und werden, als Werte für zwei lineare Funktionen genutzt
         List<Integer> data = new ArrayList<>();
 

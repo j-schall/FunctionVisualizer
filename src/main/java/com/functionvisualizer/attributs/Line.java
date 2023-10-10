@@ -1,6 +1,5 @@
 package com.functionvisualizer.attributs;
 
-import com.functionvisualizer.attributs.Coordinate;
 import com.functionvisualizer.functions.LinearFunction;
 
 public class Line {

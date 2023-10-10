@@ -11,11 +11,11 @@ import javafx.scene.control.TableView;
 public class CalculationThread extends Thread {
     @Override
     public void run() {
-        double range = FunctionVisualizer.range;
-        double m = FunctionVisualizer.m;
-        double b = FunctionVisualizer.b;
-        TableView<Coordinate> coordinateTable = FunctionVisualizer.coordinateTable;
-        XYChart.Series series = FunctionVisualizer.series;
+        double range = FunctionVisualizer.RANGE;
+        double m = FunctionVisualizer.M;
+        double b = FunctionVisualizer.B;
+        TableView<Coordinate> coordinateTable = FunctionVisualizer.COORDINATE_TABLE;
+        XYChart.Series<Number, Number> series = FunctionVisualizer.SERIES;
 
         LinearFunction lFunc = new LinearFunction();
         ProportionalFunction pFunc = new ProportionalFunction();
@@ -23,7 +23,7 @@ public class CalculationThread extends Thread {
 
         // Aktualisieren der UI im JavaFX Application Thread
         Platform.runLater(() -> {
-            switch (FunctionVisualizer.funcIndex) {
+            switch (FunctionVisualizer.FUNCTION_INDEX) {
                 case 1:
                     pFunc.create(m, range, coordinateTable, series);
                     break;

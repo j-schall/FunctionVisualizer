@@ -7,7 +7,7 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.TableView;
 
 public class SimpleQuadraticFunction {
-    public void create(double n, double range, TableView<Coordinate> pointTable, XYChart.Series series) {
+    public void create(double n, double range, TableView<Coordinate> pointTable, XYChart.Series<Number, Number> series) {
         ObservableList<Coordinate> dataPoints = FXCollections.observableArrayList();
         series.getData().clear();
         for (double x = -range; x <= range; x++) {
