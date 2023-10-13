@@ -3,6 +3,8 @@ package com.functionvisualizer.attributs;
 import com.functionvisualizer.functions.LinearFunction;
 
 public class Line {
+
+    public static double Y, M, B, X;
     public static Coordinate INTERSECT(LinearFunction func1, LinearFunction func2) {
         double b1 = func1.getB();
         double b2 = func2.getB();
@@ -37,13 +39,17 @@ public class Line {
         return new Coordinate(x, y);
     }
 
-    public static boolean POINTTEST(Coordinate point, LinearFunction func) {
-        double m = func.getM();
-        double b = func.getB();
-        double x = point.getX();
+    public static boolean POINT_TEST(Coordinate point, LinearFunction func) {
+        M = func.getM();
+        B = func.getB();
+        X = point.getX();
         double assertY = point.getY();
 
-        double y = m * x + b;
-        return assertY == y;
+        Y = M * X + B;
+        return assertY == Y;
+    }
+
+    public static String GET_POINT_TEST_STEPS() {
+        return String.format("f(%s)= %s * %s + %s = %s", X, M, X, B, Y);
     }
 }

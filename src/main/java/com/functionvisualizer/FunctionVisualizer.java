@@ -27,9 +27,7 @@ import org.gillius.jfxutils.chart.AxisConstraintStrategy;
 import org.gillius.jfxutils.chart.ChartPanManager;
 import org.gillius.jfxutils.chart.JFXChartUtil;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class FunctionVisualizer extends Application {
     public static XYChart.Series<Number, Number> SERIES;
@@ -43,12 +41,12 @@ public class FunctionVisualizer extends Application {
     public static double M;
     public static double B;
     public static double RANGE;
-    private static final Button createFunctionButton = new Button("Erstellen");
+    private final Button createFunctionButton = new Button("Erstellen");
     private final Button backButton = new Button("Zurück");
     private final Button applyButton = new Button("Bestätigen");
 
     @Override
-    public void start(Stage stage) {
+    public void start(Stage stage) throws Exception {
         functionVisualizerGUI(stage);
     }
 
@@ -62,12 +60,14 @@ public class FunctionVisualizer extends Application {
 
         MenuItem caluclateLineareFunctionItem = new MenuItem("Lineare Funktion berechnen");
         MenuItem intersectionPointItem = new MenuItem("Schnittpunkt berechnen");
+        MenuItem pointTestItem = new MenuItem("Punktprobe");
 
-        optionMenu.getItems().addAll(caluclateLineareFunctionItem, intersectionPointItem);
+        optionMenu.getItems().addAll(caluclateLineareFunctionItem, intersectionPointItem, pointTestItem);
         bar.getMenus().add(optionMenu);
 
         caluclateLineareFunctionItem.setOnAction(e -> calculateFuncGUI(stage));
         intersectionPointItem.setOnAction(e -> intersectionPointGUI(stage));
+        pointTestItem.setOnAction(e -> pointTestGUI());
 
         // Erstellung des Koordinatensystems
         X_AXIS = new NumberAxis();
@@ -99,7 +99,7 @@ public class FunctionVisualizer extends Application {
         // Die Methode zoomIn() wird aufgerufen, um in das Koordinatensytem zu zoomen
         COORDINATE_SYSTEM.setOnMouseClicked(this::zoomIn);
 
-        // Hier werden die Formelnamen mit den entsprechenden Formeln gespeichert
+       // Hier werden die Formelnamen mit den entsprechenden Formeln gespeichert
         HashMap<String, String> funktionen = new HashMap<>();
         funktionen.put("proportionale Funktion", "f(x)=m*x");
         funktionen.put("lineare Funktion", "f(x)=m*x+b");
@@ -397,6 +397,53 @@ public class FunctionVisualizer extends Application {
         area.setText("SP( " + intersectionPoint.getX() + " | " + intersectionPoint.getY() + " )");
     }
 
+    private void pointTestGUI() {
+        Stage stage = new Stage();
+        VBox box = new VBox();
+        Scene scene = new Scene(box, 300, 250);
+
+        TextField coorField = new TextField();
+        String resultTxt = "Auswertung: ";
+        Label checkLabel = new Label(resultTxt);
+
+        applyButton.setOnAction(e -> {
+            Coordinate coordinate = new Coordinate();
+            List<Double> coordinates = parseToInteger(coorField.getText());
+            coordinate.setX(coordinates.get(0));
+            coordinate.setY(coordinates.get(1));
+
+            LinearFunction function = new LinearFunction(4, 5);
+            checkLabel.setText(returnTestSteps(coordinate, function));
+        });
+
+        box.getChildren().addAll(coorField, applyButton, checkLabel);
+
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    public List<Double> parseToInteger(String input) {
+        List<Double> coorValue = new ArrayList<>();
+        String[] parts = input.split(";");
+
+        try {
+            double num1 = Integer.parseInt(parts[0]);
+            double num2 = Integer.parseInt(parts[1]);
+
+            coorValue.add(num1);
+            coorValue.add(num2);
+        } catch (NumberFormatException e) {
+            handleFormatException(e);
+        }
+        return coorValue;
+    }
+
+    private String returnTestSteps(Coordinate coor, LinearFunction func) {
+        double y = coor.getY();
+        return Line.POINT_TEST(coor, func) ? "Auswertung: ✅\n" + Line.GET_POINT_TEST_STEPS() + "\n\t⇒" + y + " = " + Line.Y
+                : "Auswertung: ❌\n" + Line.GET_POINT_TEST_STEPS() + "\n\t⇒" + y + " ≠ " + Line.Y;
+    }
+
     private void showError(AlertType type, Window owner, String title, String message) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
@@ -404,5 +451,9 @@ public class FunctionVisualizer extends Application {
         alert.initOwner(owner);
         alert.setTitle(title);
         alert.show();
+    }
+
+    public static void main(String[] args) {
+        launch();
     }
 }

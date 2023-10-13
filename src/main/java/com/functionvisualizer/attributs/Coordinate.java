@@ -4,11 +4,24 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ObservableValue;
 
 public class Coordinate {
-    private final SimpleDoubleProperty x, y;
+    private SimpleDoubleProperty x, y;
 
     public Coordinate(double x, double y) {
         this.x = new SimpleDoubleProperty(x);
         this.y = new SimpleDoubleProperty(y);
+    }
+
+    public Coordinate() {
+    }
+
+    public void setX(double x) {
+        this.x = new SimpleDoubleProperty();
+        this.x.set(x);
+    }
+
+    public void setY(double y) {
+        this.y = new SimpleDoubleProperty();
+        this.y.set(y);
     }
 
     public double getX() {
