@@ -11,6 +11,7 @@ public class LinearFunction {
     private double b, m;
 
     public LinearFunction() {
+
     }
 
     public LinearFunction(double m, double b) {
@@ -18,7 +19,7 @@ public class LinearFunction {
         this.b = b;
     }
 
-    public void create(double m, double b, double range, TableView<Coordinate> pointTable, XYChart.Series<Number, Number> series) {
+    public static void create(double m, double b, double range, TableView<Coordinate> pointTable, XYChart.Series<Number, Number> series) {
         ObservableList<Coordinate> dataPoints = FXCollections.observableArrayList();
         series.getData().clear();
         for (double x = -range; x <= range; x++) { //Variable range definiert die Länge des Graphen
@@ -40,10 +41,9 @@ public class LinearFunction {
         // y-Achsenabschnitt b berechnen, indem man den Rest der Subtraktion, von y1
         // und dem Ergebnis der Multipplikation von m und x, berechnet
         this.b = y1 - m * x1;
-        // Wenn b kleiner als 0 ist, dann soll das Vorzeichen von b angezeigt werden, statt dem +
-        if (b < 0) return "f(x)=" + m + "*" + "x" + b;
 
-        return "f(x)=" + m + "*" + "x" + "+" + b;
+        // Wenn b kleiner als 0 ist, dann soll das Vorzeichen von b angezeigt werden, statt dem +
+        return b < 0 ? "f(x)=" + m + "*" + "x" + b : "f(x)=" + m + "*" + "x" + "+" + b;
     }
 
     public double getM() {

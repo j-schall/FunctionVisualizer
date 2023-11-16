@@ -6,6 +6,7 @@ import com.functionvisualizer.functions.ProportionalFunction;
 import com.functionvisualizer.functions.SimpleQuadraticFunction;
 import javafx.application.Platform;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableView;
 
 public class CalculationThread extends Thread {
@@ -14,25 +15,20 @@ public class CalculationThread extends Thread {
         double range = FunctionVisualizer.RANGE;
         double m = FunctionVisualizer.M;
         double b = FunctionVisualizer.B;
+        MenuItem item = FunctionVisualizer.SELECTED_ITEM;
+        Object[] functions = FunctionVisualizer.FUNCTIONS.keySet().toArray();
+
         TableView<Coordinate> coordinateTable = FunctionVisualizer.COORDINATE_TABLE;
         XYChart.Series<Number, Number> series = FunctionVisualizer.SERIES;
 
-        LinearFunction lFunc = new LinearFunction();
-        ProportionalFunction pFunc = new ProportionalFunction();
-        SimpleQuadraticFunction sqf = new SimpleQuadraticFunction();
-
         // Aktualisieren der UI im JavaFX Application Thread
         Platform.runLater(() -> {
-            switch (FunctionVisualizer.FUNCTION_INDEX) {
-                case 1:
-                    pFunc.create(m, range, coordinateTable, series);
-                    break;
-                case 2:
-                    lFunc.create(m, b, range, coordinateTable, series);
-                    break;
-                case 3:
-                    sqf.create(m, range, coordinateTable, series);
-                    break;
+            if (item.getText().equals(functions[0])) {
+                SimpleQuadraticFunction.create(m, range, coordinateTable, series);
+            } else if (item.getText().equals(functions[1])) {
+                ProportionalFunction.create(m, range, coordinateTable, series);
+            } else if (item.getText().equals(functions[2])) {
+                LinearFunction.create(m, b, range, coordinateTable, series);
             }
         });
     }

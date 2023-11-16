@@ -7,7 +7,7 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.TableView;
 
 public class ProportionalFunction {
-    public void create(double m, double range, TableView<Coordinate> pointTable, XYChart.Series<Number, Number> series) {
+    public static void create(double m, double range, TableView<Coordinate> pointTable, XYChart.Series<Number, Number> series) {
         ObservableList<Coordinate> dataPoints = FXCollections.observableArrayList();
         series.getData().clear();
         for (double x = -range; x <= range; x++) {
