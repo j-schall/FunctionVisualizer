@@ -161,15 +161,6 @@ public class FunctionVisualizer extends Application {
         yColumn.setCellValueFactory(data -> data.getValue().yProperty());
         COORDINATE_TABLE.getColumns().addAll(xColumn, yColumn);
 
-        // Spinner wird erstellt, um die Länge des Graphen einzustellen
-        var infoLabel = new Label("Wert für x:");
-
-        var RANGE_SPINNER = new Spinner<Double>();
-        RANGE_SPINNER.setEditable(true);
-
-        var valueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(1, Integer.MAX_VALUE);
-        RANGE_SPINNER.setValueFactory(valueFactory);
-
         COORDINATE_TABLE.setOnMouseClicked(e -> highlightPoints());
 
         var showCoordinates = new CheckBox("Zeige Koordinaten");
@@ -209,8 +200,6 @@ public class FunctionVisualizer extends Application {
                 formelArea,
                 mField,
                 bField,
-                infoLabel,
-                RANGE_SPINNER,
                 showCoordinates,
                 createFunctionButton,
                 COORDINATE_TABLE);
