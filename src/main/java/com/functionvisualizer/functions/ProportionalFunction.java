@@ -13,7 +13,9 @@ public class ProportionalFunction {
         for (double x = -range; x <= range; x++) {
             double y = m * x;
             dataPoints.add(new Coordinate(x, y));
-            series.getData().add(new XYChart.Data<>(x, y));
+            if (x == -range || x == range) {
+                series.getData().add(new XYChart.Data<>(x, y));
+            }
         }
         pointTable.setItems(dataPoints);
     }

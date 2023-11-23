@@ -13,9 +13,12 @@ public class SimpleQuadraticFunction {
         for (double x = -range; x <= range; x++) {
             double y = n * Math.pow(x, 2);
             dataPoints.add(new Coordinate(x, y));
-            series.getData().add(new XYChart.Data<>(x, y));
-        }
 
+            if (x == range || x == -range) {
+                series.getData().add(new XYChart.Data<>(x, y));
+            }
+
+        }
         pointTable.setItems(dataPoints);
     }
 }

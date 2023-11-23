@@ -25,7 +25,9 @@ public class LinearFunction {
         for (double x = -range; x <= range; x++) { //Variable range definiert die Länge des Graphen
             double y = m * x + b;
             dataPoints.add(new Coordinate(x, y));
-            series.getData().add(new XYChart.Data<>(x, y));
+            if (x == -range || x == range) {
+                series.getData().add(new XYChart.Data<>(x, y));
+            }
         }
         pointTable.setItems(dataPoints);
     }

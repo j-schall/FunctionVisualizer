@@ -3,7 +3,6 @@ package com.functionvisualizer.attributs;
 import com.functionvisualizer.functions.LinearFunction;
 
 public class Line {
-
     public static double Y, M, B, X;
     public static Coordinate INTERSECT(LinearFunction func1, LinearFunction func2) {
         double b1 = func1.getB();

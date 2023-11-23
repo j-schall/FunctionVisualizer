@@ -8,8 +8,12 @@ import javafx.application.Platform;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
+
+import javax.tools.Tool;
 
 public class CalculationThread extends Thread {
+    private final TableView<Coordinate> coordinateTable = FunctionVisualizer.COORDINATE_TABLE;
     @Override
     public void run() {
         double range = FunctionVisualizer.RANGE;
@@ -17,18 +21,34 @@ public class CalculationThread extends Thread {
         double b = FunctionVisualizer.B;
         MenuItem item = FunctionVisualizer.SELECTED_ITEM;
         Object[] functions = FunctionVisualizer.FUNCTIONS.keySet().toArray();
-
-        TableView<Coordinate> coordinateTable = FunctionVisualizer.COORDINATE_TABLE;
         XYChart.Series<Number, Number> series = FunctionVisualizer.SERIES;
 
         // Aktualisieren der UI im JavaFX Application Thread
         Platform.runLater(() -> {
             if (item.getText().equals(functions[0])) {
                 SimpleQuadraticFunction.create(m, range, coordinateTable, series);
+                scrollEvent();
             } else if (item.getText().equals(functions[1])) {
                 ProportionalFunction.create(m, range, coordinateTable, series);
+                scrollEvent();
             } else if (item.getText().equals(functions[2])) {
                 LinearFunction.create(m, b, range, coordinateTable, series);
+                scrollEvent();
+            }
+        });
+    }
+
+    // Scroll to the intersection point where the graph intersect with the y-axis
+    private void scrollEvent() {
+        Platform.runLater(() -> {
+            for (Coordinate coor : coordinateTable.getItems()) {
+                if (coor.getX() == 0) {
+                    int index = coordinateTable.getItems().indexOf(coor);
+                    coordinateTable.requestFocus();
+                    coordinateTable.getSelectionModel().select(index);
+                    coordinateTable.getFocusModel().focus(index);
+                    coordinateTable.scrollTo(index);
+                }
             }
         });
     }

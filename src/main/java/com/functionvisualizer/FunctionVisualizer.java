@@ -5,7 +5,6 @@
  |  __| | | | '_ \ / __| __| |/ _ \| '_ \    \ \/ / | / __| | | |/ _` | | |_  / _ \ '__|
  | |  | |_| | | | | (__| |_| | (_) | | | |    \  /  | \__ \ |_| | (_| | | |/ /  __/ |
  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|     \/   |_|___/\__,_|\__,_|_|_/___\___|_|
-
  *******************************************************************************************/
 
 package com.functionvisualizer;
@@ -15,6 +14,7 @@ import com.functionvisualizer.attributs.Line;
 import com.functionvisualizer.functions.LinearFunction;
 import javafx.animation.TranslateTransition;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
@@ -70,6 +70,7 @@ public class FunctionVisualizer extends Application {
     private final Button applyButton = new Button("Bestätigen");
     private final TextField mField = new TextField();
     private final TextField bField = new TextField();
+    private Stage mainStage;
 
     @Override
     public void start(Stage stage) throws Exception {
@@ -77,6 +78,7 @@ public class FunctionVisualizer extends Application {
     }
 
     private void functionVisualizerGUI(Stage stage) {
+        mainStage = stage;
         var root = new BorderPane();
         SCENE = new Scene(root, 1000, 600);
         SCENE.getStylesheets().add("stylesheet.css");
@@ -168,7 +170,7 @@ public class FunctionVisualizer extends Application {
         var valueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(1, Integer.MAX_VALUE);
         RANGE_SPINNER.setValueFactory(valueFactory);
 
-        COORDINATE_TABLE.setOnMouseClicked(e -> highlightPoints(COORDINATE_TABLE));
+        COORDINATE_TABLE.setOnMouseClicked(e -> highlightPoints());
 
         var showCoordinates = new CheckBox("Zeige Koordinaten");
 
@@ -187,8 +189,17 @@ public class FunctionVisualizer extends Application {
         stage.widthProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observableValue, Number oldNum, Number newNum) {
-                if ((double)oldNum < stage.getWidth() || (double)oldNum > stage.getWidth())
+                if ((double) oldNum < stage.getWidth() || (double) oldNum > stage.getWidth())
                     settingsSide.setPrefWidth(newNum.doubleValue() / 3);
+            }
+        });
+
+        // Die TableView wird je nach Höhe der settingsSide angepasst
+        settingsSide.heightProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number oldNum, Number newNum) {
+                if ((double) oldNum < settingsSide.getHeight())
+                    COORDINATE_TABLE.setPrefHeight(newNum.doubleValue());
             }
         });
 
@@ -262,7 +273,7 @@ public class FunctionVisualizer extends Application {
                 openTransition.play();
                 count[0] = 1;
             } else {
-                closeTransition.setToX(pane.getWidth()*2);
+                closeTransition.setToX(pane.getWidth() * 2);
                 closeTransition.play();
                 count[0] = 0;
             }
@@ -272,34 +283,43 @@ public class FunctionVisualizer extends Application {
     private void handleCoordinatesSelected(Tooltip coordinates) throws AWTException {
         final double COOR_SYSTEM_WIDTH = COORDINATE_SYSTEM.getWidth();
         final double COOR_SYSTEM_HEIGHT = COORDINATE_SYSTEM.getHeight();
+
         coordinates.show(COORDINATE_SYSTEM.getScene().getWindow());
         COORDINATE_SYSTEM.setOnMouseMoved(e -> {
             double mousePosX = e.getX();
             double mousePosY = e.getY();
             if (e.getX() <= COOR_SYSTEM_WIDTH && e.getY() <= COOR_SYSTEM_HEIGHT) {
-                coordinates.setX(mousePosX);
-                coordinates.setY(mousePosY);
+                if (coordinates.getX() < SCENE.getWidth() && coordinates.getY() < SCENE.getHeight()) {
+                    coordinates.setAnchorX(mousePosX);
+                    coordinates.setAnchorY(mousePosY);
 
-                var mousePoint = new Point2D(e.getSceneX(), e.getSceneY());
-                double x = X_AXIS.sceneToLocal(mousePoint).getX();
-                double y = Y_AXIS.sceneToLocal(mousePoint).getY();
-
-                double xValue = (double) X_AXIS.getValueForDisplay(x);
-                double yValue = (double) Y_AXIS.getValueForDisplay(y);
-                coordinates.setText("( " + xValue + " | " + yValue + " )");
+                    // Koordinaten der Mouse auf dem Koordinatensystem werden angezeigt
+                    Point2D position = mousePosition(e);
+                    coordinates.setText("( " + position.getX() + " | " + position.getY() + " )");
+                }
             }
         });
+    }
+
+    private Point2D mousePosition(MouseEvent e) {
+        var mousePoint = new Point2D(e.getSceneX(), e.getSceneY());
+        double x = X_AXIS.sceneToLocal(mousePoint).getX();
+        double y = Y_AXIS.sceneToLocal(mousePoint).getY();
+
+        double xValue = (double) X_AXIS.getValueForDisplay(x);
+        double yValue = (double) Y_AXIS.getValueForDisplay(y);
+        return new Point2D(xValue, yValue);
     }
 
     private void handleMenuItemSelected(MenuItem menuItem, HashMap<String, String> map, Label formelArea) {
         SELECTED_ITEM = menuItem;
         formelArea.setText("Formel: " + map.get(menuItem.getText()));
-        createFunctionButton.setOnMouseClicked(e -> handleCoordinateSystemBound());
+        createFunctionButton.setOnMouseClicked(e -> handleCoordinateSystemBound(100)); // Standart range
     }
 
-    private void handleCoordinateSystemBound() {
-        try{
-            setCoordinateSystemBound();
+    private void handleCoordinateSystemBound(int range) {
+        try {
+            setCoordinateSystemBound((int) (RANGE + range));
             CalculationThread thread = new CalculationThread();
             thread.start();
         } catch (NumberFormatException e) {
@@ -307,13 +327,14 @@ public class FunctionVisualizer extends Application {
         }
     }
 
-    private void setCoordinateSystemBound() throws NumberFormatException {
+    private void setCoordinateSystemBound(int range) throws NumberFormatException {
         final int bound = 10;
-        RANGE = 100;
+        final int MAX_DATA_SIZE = 60;
 
-        if (bField.getText().isEmpty()) {
-            bField.setText("0");
-        }
+        RANGE = range;
+
+        if (bField.getText().isEmpty()) bField.setText("0");
+
         B = Double.parseDouble(bField.getText());
         M = Double.parseDouble(mField.getText());
 
@@ -325,28 +346,14 @@ public class FunctionVisualizer extends Application {
         Y_AXIS.setLowerBound(-bound);
         Y_AXIS.setUpperBound(bound);
 
-        // Koordinaten werden hinzugefügt oder enfernt
+        // Koordinaten werden je nachdem gelöscht, um die Performance zu verbessern
         if (SERIES.getData().size() > 1) {
             XYChart.Data<Number, Number> lastData = SERIES.getData().get(SERIES.getData().size() - 1);
             if (lastData.getXValue() != null || !(Double.isNaN((double) lastData.getXValue()))) {
-                if ((double)lastData.getXValue() < X_AXIS.getUpperBound() && (double)lastData.getXValue() > 200) {
-                    SERIES.getData().remove(0, 70);
-                } else {
-                    RANGE += 10;
+                double dataSize = SERIES.getData().size();
+                if (dataSize > MAX_DATA_SIZE) {
+                    SERIES.getData().remove(0, 50);
                 }
-            } else {
-                System.out.println("Warummm???");
-            }
-        }
-
-        double step = 1;
-        double startX = X_AXIS.getLowerBound();
-        double endX = X_AXIS.getUpperBound();
-        for (double x = startX; x <= endX; x += step) {
-            double y = M * x + B;
-            if (y >= Y_AXIS.getLowerBound() && y <= Y_AXIS.getUpperBound() && x >= X_AXIS.getLowerBound() && x <= X_AXIS.getUpperBound()) {
-                var newData = new XYChart.Data<Number, Number>(x, y);
-                SERIES.getData().add(newData);
             }
         }
     }
@@ -358,9 +365,7 @@ public class FunctionVisualizer extends Application {
     }
 
     private void zoomIn(MouseEvent e) {
-        // Das Dependency jfxutils, macht das der LineChart verändert werden kann
         var panner = new ChartPanManager(COORDINATE_SYSTEM);
-        //Wenn der rechte Mousebutton gedrückt wurde, verschiebt man das Sichtfeld des Koordinatensytsems
         panner.setMouseFilter(mouseEvent -> {
             boolean isPressed = mouseEvent.getButton() == MouseButton.PRIMARY || mouseEvent.getButton() == MouseButton.SECONDARY;
             if (!isPressed) {
@@ -372,14 +377,21 @@ public class FunctionVisualizer extends Application {
         panner.setAxisConstraintStrategy(strategies);
         panner.start();
 
-        // Wenn man die rechte Maustaste gedrückt hält, wird ein Rechteck gezeichnet, um an die gewünschte Stelle zu zoomen
         JFXChartUtil.setupZooming(COORDINATE_SYSTEM, mouseEvent -> {
-            if (mouseEvent.getButton() != MouseButton.SECONDARY) {// Zoomen wird getriggert, wenn man die secondäre Maustaste gedrückt hat
+            if (mouseEvent.getButton() != MouseButton.SECONDARY) {
                 mouseEvent.consume();
-            } else {
                 double x = getFocusedCoordinate().getX();
                 if (X_AXIS.getUpperBound() >= x) {
-                    handleCoordinateSystemBound();
+
+                    COORDINATE_SYSTEM.setOnMouseMoved(ev -> {
+                        // Wenn die Mausposition größer als der größte (letzte) Punkt auf dem Graph ist,
+                        // erhöht sich die Range um 50 weiteren Punkten
+                        if (SERIES.getData().get(SERIES.getData().size()-1).getYValue().doubleValue() <= mousePosition(ev).getY() ||
+                                SERIES.getData().get(0).getYValue().doubleValue() > mousePosition(ev).getY()) {
+                            handleCoordinateSystemBound(50);
+                            ev.consume();
+                        }
+                    });
                     mouseEvent.consume();
                 }
             }
@@ -392,18 +404,13 @@ public class FunctionVisualizer extends Application {
 
         var pane = new GridPane();
         var box = new VBox();
-        SCENE = new Scene(box);
+        var scene = new Scene(box);
 
         var visualizeButton = new Button("Visualisieren");
 
         var formelArea = new TextArea();
         formelArea.setPromptText("Funktionsgleichung: ");
         formelArea.setWrapText(true);
-
-        pane.add(backButton, 0, 0);
-        pane.add(applyButton, 0, 3);
-        pane.add(formelArea, 1, 4);
-        box.getChildren().addAll(pane, formelArea, visualizeButton);
 
         var inset = new Insets(10);
         VBox.setMargin(formelArea, inset);
@@ -418,13 +425,22 @@ public class FunctionVisualizer extends Application {
 
         // Speichert die Funktionsgleichung
         final String[] func = new String[1];
+
         applyButton.setOnAction(e -> {
-            func[0] = visualizeCalculatedFunc(textFields, visualizeButton, stage);
-            formelArea.setText(func[0]);
+            try {
+                func[0] = visualizeCalculatedFunc(textFields, visualizeButton, mainStage);
+                formelArea.setText(func[0]);
+            } catch (NumberFormatException ex) {
+                showError(AlertType.ERROR, applyButton.getScene().getWindow(), ex.getMessage(), "Die angegebenen Zahlen konnten nicht formatiert werden. " +
+                        "Überprüfe deine Eingabe");
+            }
         });
 
-        backButton.setOnAction(e -> functionVisualizerGUI(stage));
-        stage.setScene(SCENE);
+        pane.add(applyButton, 0, 3);
+        pane.add(formelArea, 1, 4);
+        box.getChildren().addAll(pane, formelArea, visualizeButton);
+        stage.setScene(scene);
+        stage.show();
     }
 
     // Erstellt automatisch ein Raster aus TextFeldern
@@ -473,7 +489,7 @@ public class FunctionVisualizer extends Application {
         return null;
     }
 
-    private void highlightPoints(TableView<Coordinate> table) {
+    private void highlightPoints() {
         // Schreibe Code, sodass wenn selectedCoor in der Tabelle ausgewählt wurde, dass dieser Punkt im Koordinatensystem markiert wird
         var pointsToAdd = new ArrayList<XYChart.Data<Number, Number>>();
         var selectedCoor = getFocusedCoordinate();
@@ -491,6 +507,23 @@ public class FunctionVisualizer extends Application {
             }
         }
         SERIES.getData().addAll(pointsToAdd);
+        navigateToPoint(selectedCoor);
+    }
+
+    private void navigateToPoint(Coordinate coor) {
+        double xValue = coor.getX();
+        double yValue = coor.getY();
+        for (XYChart.Data<Number, Number> data : SERIES.getData()) {
+            if (data.getXValue().doubleValue() == xValue && data.getYValue().doubleValue() == yValue) {
+                X_AXIS.setAutoRanging(false);
+                Y_AXIS.setAutoRanging(false);
+                X_AXIS.setLowerBound(xValue - 1);
+                X_AXIS.setUpperBound(xValue + 1);
+                Y_AXIS.setLowerBound(yValue - 1);
+                Y_AXIS.setUpperBound(yValue + 1);
+                return;
+            }
+        }
     }
 
     private Coordinate getFocusedCoordinate() {

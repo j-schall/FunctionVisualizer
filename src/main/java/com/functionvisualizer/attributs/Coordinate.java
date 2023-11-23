@@ -2,8 +2,9 @@ package com.functionvisualizer.attributs;
 
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ObservableValue;
+import javafx.scene.Node;
 
-public class Coordinate {
+public class Coordinate extends Node {
     private SimpleDoubleProperty x, y;
 
     public Coordinate(double x, double y) {
@@ -46,6 +47,11 @@ public class Coordinate {
                 "x=" + x +
                 ", y=" + y +
                 '}';
+    }
+
+    @Override
+    public Node getStyleableNode() {
+        return super.getStyleableNode();
     }
 }
 
