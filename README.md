@@ -1,5 +1,5 @@
 # FunctionVisualizer
-![grafik](https://github.com/j-schall/FunctionVisualizer/assets/122560931/2171feda-0182-44e3-8219-69801185daee)
+![grafik](https://github.com/j-schall/FunctionVisualizer/assets/122560931/68fada0c-e7d8-478e-aca7-0c430a309bcf)
 With this tool you can:
 <ul>
   <li>Visualize linear, propotional and quadratic functions</li>
