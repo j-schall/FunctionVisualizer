@@ -3,14 +3,12 @@ package com.functionvisualizer;
 import com.functionvisualizer.attributs.Coordinate;
 import com.functionvisualizer.functions.LinearFunction;
 import com.functionvisualizer.functions.ProportionalFunction;
-import com.functionvisualizer.functions.SimpleQuadraticFunction;
+import com.functionvisualizer.functions.QuadraticFunction;
 import javafx.application.Platform;
 import javafx.scene.chart.XYChart;
-import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableView;
-import javafx.scene.control.Tooltip;
 
-import javax.tools.Tool;
+import java.util.Arrays;
 
 public class CalculationThread extends Thread {
     private final TableView<Coordinate> coordinateTable = FunctionVisualizer.COORDINATE_TABLE;
@@ -19,19 +17,20 @@ public class CalculationThread extends Thread {
         double range = FunctionVisualizer.RANGE;
         double m = FunctionVisualizer.M;
         double b = FunctionVisualizer.B;
-        MenuItem item = FunctionVisualizer.SELECTED_ITEM;
+        String function = FunctionVisualizer.SELECTED_FUNC;
         Object[] functions = FunctionVisualizer.FUNCTIONS.keySet().toArray();
+        System.out.println(Arrays.toString(functions));
         XYChart.Series<Number, Number> series = FunctionVisualizer.SERIES;
 
         // Aktualisieren der UI im JavaFX Application Thread
         Platform.runLater(() -> {
-            if (item.getText().equals(functions[0])) {
-                SimpleQuadraticFunction.create(m, range, coordinateTable, series);
+            if (function.equals(functions[0])) {
+                QuadraticFunction.create(m, range, coordinateTable, series);
                 scrollEvent();
-            } else if (item.getText().equals(functions[1])) {
+            } else if (function.equals(functions[1])) {
                 ProportionalFunction.create(m, range, coordinateTable, series);
                 scrollEvent();
-            } else if (item.getText().equals(functions[2])) {
+            } else if (function.equals(functions[2])) {
                 LinearFunction.create(m, b, range, coordinateTable, series);
                 scrollEvent();
             }

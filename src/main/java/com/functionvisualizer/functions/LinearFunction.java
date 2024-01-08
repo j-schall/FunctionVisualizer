@@ -55,4 +55,9 @@ public class LinearFunction {
     public double getB() {
         return b;
     }
+
+    @Override
+    public String toString() {
+        return "f(x)=" + m + "*" + "x" + "+" + b;
+    }
 }
