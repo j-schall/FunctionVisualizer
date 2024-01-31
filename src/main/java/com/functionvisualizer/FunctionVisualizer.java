@@ -69,13 +69,17 @@ public class FunctionVisualizer extends Application {
     public static double M = 0;
     public static double B = 0;
     public static double RANGE;
-    private final Button createFunctionButton = new Button("Erstellen");
-    private final Button applyButton = new Button("Bestätigen");
+    private final Button createFunctionButton = new Button("Create");
+    private final Button submitButton = new Button("Submit");
     private final TextField functionField = new TextField();
     private final TextField bField = new TextField();
-    private Menu optionMenu = new Menu("Optionen");
+    private final Menu optionMenu = new Menu("Options");
     public static String SELECTED_FUNC;
     private Stage mainStage;
+
+    public final String PROPORTIONAL_FUNCTION = "proportional Function";
+    public final String LINEAR_FUNCTION = "linear Function";
+    public final String QUADRATIC_FUNCTION = "quadratic Function";
 
     @Override
     public void start(Stage stage) {
@@ -90,21 +94,18 @@ public class FunctionVisualizer extends Application {
 
         var root = new BorderPane();
         SCENE = new Scene(root);
-        SCENE.getStylesheets().add("stylesheet.css");
 
         // MenuBar erstellen, um verschiedene Berechnungen durchzuführen
         var bar = new MenuBar();
 
-        var caluclateLineareFunctionItem = new MenuItem("Lineare Funktion berechnen");
-        var intersectionPointItem = new MenuItem("Schnittpunkt berechnen");
-        var pointTestItem = new MenuItem("Punktprobe");
+        var caluclateLineareFunctionItem = new MenuItem("Calculate linear function");
+        var intersectionPointItem = new MenuItem("calculate intersection points");
 
-        optionMenu.getItems().addAll(caluclateLineareFunctionItem, intersectionPointItem, pointTestItem);
+        optionMenu.getItems().addAll(caluclateLineareFunctionItem, intersectionPointItem);
         bar.getMenus().add(optionMenu);
 
         caluclateLineareFunctionItem.setOnAction(e -> calculateFuncGUI());
         intersectionPointItem.setOnAction(e -> intersectionPointGUI());
-        pointTestItem.setOnAction(e -> pointTestGUI());
 
         // Erstellung des Koordinatensystems
         X_AXIS = new NumberAxis();
@@ -127,19 +128,20 @@ public class FunctionVisualizer extends Application {
         functionField.setPromptText("Funktion");
 
         var xField = new TextField();
-        xField.setPromptText("Punkt x");
+        xField.setPromptText("Point x");
 
-        bField.setPromptText("y-Achsenabschnitt");
+        bField.setPromptText("y-axes intersection point");
 
         // Die Methode zoomIn() wird aufgerufen, um in das Koordinatensytem zu zoomen
         COORDINATE_SYSTEM.setOnScroll(this::zoom);
 
-
         // Button der die Funktion, mit den entsprechenden Daten, erstellt
         VBox.setMargin(createFunctionButton, new Insets(20));
+
         createFunctionButton.setOnAction(e -> {
-            identifyFunctionType(functionField.getText());
-            //handleMenuItemSelected(SELECTED_FUNC, functions, formelArea);
+            Window errorWindow = createFunctionButton.getScene().getWindow();
+            SELECTED_FUNC = identifyFunctionType(functionField.getText(), errorWindow);
+            handleCoordinateSystemBound(100);
         });
 
         // Tabelle + Tabellenspalten werden erstellt, die die Inhalte von der Klasse Coordinate enthalten
@@ -155,7 +157,7 @@ public class FunctionVisualizer extends Application {
 
         COORDINATE_TABLE.setOnMouseClicked(e -> highlightPoints());
 
-        var showCoordinates = new CheckBox("Zeige Koordinaten");
+        var showCoordinates = new CheckBox("Show coordinates");
 
         /*
          * Button um das Optionenfenster zu öffnen
@@ -233,15 +235,15 @@ public class FunctionVisualizer extends Application {
 
     private HashMap<String, String> functionCollection() {
         var functions = new HashMap<String, String>();
-        functions.put("proportionale Funktion", "f(x)=m*x");
-        functions.put("lineare Funktion", "f(x)=m*x+b");
-        functions.put("quadratische Funktion", "f(x)=a*x²");
+        functions.put(PROPORTIONAL_FUNCTION, "f(x)=m*x");
+        functions.put(LINEAR_FUNCTION, "f(x)=m*x+b");
+        functions.put(QUADRATIC_FUNCTION, "f(x)=a*x^2");
         return functions;
     }
 
-    private void identifyFunctionType(String input) {
+    private String identifyFunctionType(String input, Window errorWindow) {
         // Remove any leading or trailing whitespaces
-        if (input == null) return;
+        if (input == null) return null;
         input = input.trim();
 
         // Check if the input starts with "f(x)=" or other letters
@@ -259,23 +261,21 @@ public class FunctionVisualizer extends Application {
             if (matcher.matches()) {
                 if (functionBody.matches(linearPattern.pattern())) {
                     M = Double.parseDouble(matcher.group(1));
-
                     // If b (in matcher.group(2)) is NOT null, it's a linear function, else it's a proportional function
                     if (matcher.group(2) != null) {
                         B = Double.parseDouble(matcher.group(2));
-                        SELECTED_FUNC = "lineare Funktion";
+                        return LINEAR_FUNCTION;
                     } else {
-                        SELECTED_FUNC = "proportionale Funktion";
+                        return PROPORTIONAL_FUNCTION;
                     }
                 } else if (functionBody.matches(quadraticPattern.pattern())) {
-                    SELECTED_FUNC = "quadratische Funktion";
+                    return QUADRATIC_FUNCTION;
                 }
-                handleCoordinateSystemBound(100);
             }
         } else {
-            Window owner = createFunctionButton.getScene().getWindow();
-            showError(AlertType.ERROR, owner, "", "Ungültige Eingabe (muss mit 'f(x)=' beginnen)");
+            showError(AlertType.ERROR, errorWindow, "", "Invalid input. Please check your function and retry");
         }
+        return null;
     }
 
     private void setTransition(Pane pane, Button button, BorderPane root) {
@@ -387,7 +387,7 @@ public class FunctionVisualizer extends Application {
             if (mouseEvent.getButton() != MouseButton.SECONDARY) {
                 mouseEvent.consume();
 
-                if (COORDINATE_TABLE.getItems().size() > 0) {
+                if (!COORDINATE_TABLE.getItems().isEmpty()) {
                     double x = getFocusedCoordinate().getX();
 
                     if (X_AXIS.getUpperBound() >= x) {
@@ -434,10 +434,10 @@ public class FunctionVisualizer extends Application {
         var box = new VBox();
         var scene = new Scene(box);
 
-        var visualizeButton = new Button("Visualisieren");
+        var visualizeButton = new Button("Visualize");
 
         var formelArea = new TextArea();
-        formelArea.setPromptText("Funktionsgleichung: ");
+        formelArea.setPromptText("Function equation: ");
         formelArea.setWrapText(true);
 
         var inset = new Insets(10);
@@ -446,7 +446,7 @@ public class FunctionVisualizer extends Application {
         VBox.setMargin(pane, inset);
 
         // Erstellung der Textfelder, um die Daten des Benutzers in die Coordinate Klasse zu integrieren
-        String[] fields = {"x-Koordinate", "y-Koordinate"};
+        String[] fields = {"x-coordinate", "y-coordinate"};
         var textFields = new ArrayList<TextField>();
 
         makeGrid(fields, textFields, pane, 0, true);
@@ -454,21 +454,21 @@ public class FunctionVisualizer extends Application {
         // Speichert die Funktionsgleichung
         final String[] func = new String[1];
 
-        applyButton.setOnAction(e -> {
+        submitButton.setOnAction(e -> {
             try {
                 func[0] = visualizeCalculatedFunc(textFields, visualizeButton, mainStage);
                 formelArea.setText(func[0]);
             } catch (NumberFormatException ex) {
-                showError(AlertType.ERROR, applyButton.getScene().getWindow(), ex.getMessage(), "Die angegebenen Zahlen konnten nicht formatiert werden. " +
+                showError(AlertType.ERROR, submitButton.getScene().getWindow(), ex.getMessage(), "Die angegebenen Zahlen konnten nicht formatiert werden. " +
                         "Überprüfe deine Eingabe");
             }
         });
 
-        pane.add(applyButton, 0, 3);
+        pane.add(submitButton, 0, 3);
         pane.add(formelArea, 1, 4);
         box.getChildren().addAll(pane, formelArea, visualizeButton);
         stage.setScene(scene);
-        stage.setTitle("lineare Funktion berechnen");
+        stage.setTitle("Calculate Linear Function");
         stage.show();
     }
 
@@ -499,10 +499,10 @@ public class FunctionVisualizer extends Application {
                     var coordinate2 = new Coordinate(doubles.get(2), doubles.get(3));
 
                     // Die Funktion, welche berechnet wurde, wird in dem Koordinatensystem veranschaulicht
+                    Window errorWindow = submitButton.getScene().getWindow();
                     button1.setOnAction(e -> {
                         functionVisualizerGUI(stage);
-                        System.out.println(function);
-                        identifyFunctionType(function.toString());
+                        identifyFunctionType(function.toString(), errorWindow);
                     });
 
                     return function.calculateLineareFunction(coordinate1, coordinate2);
@@ -518,12 +518,12 @@ public class FunctionVisualizer extends Application {
         // Schreibe Code, sodass wenn selectedCoor in der Tabelle ausgewählt wurde, dass dieser Punkt im Koordinatensystem markiert wird
         var pointsToAdd = new ArrayList<XYChart.Data<Number, Number>>();
 
-        if (COORDINATE_TABLE.getItems().size()>0) {
+        if (!COORDINATE_TABLE.getItems().isEmpty()) {
             var selectedCoor = getFocusedCoordinate();
 
             // Wenn mehrere Punkte markiert werden, werden diese wieder entfernt, damit immer nur einer angezeigt wird
             SERIES.getData().removeIf(data -> data.getNode() instanceof Circle);
-            if (SERIES.getData().size() > 0) {
+            if (!SERIES.getData().isEmpty()) {
                 var circle = new Circle(5);
                 circle.setFill(Color.BLACK);
                 XYChart.Data<Number, Number> data = new XYChart.Data<>(selectedCoor.getX(), selectedCoor.getY());
@@ -558,86 +558,43 @@ public class FunctionVisualizer extends Application {
 
     private void intersectionPointGUI() {
         var stage = new Stage();
-        var pane = new GridPane();
         var box = new VBox();
         var scene = new Scene(box);
 
-        var func1Label = new Label("Funktion 1:");
-        var func2Label = new Label("Funktion 2:");
-
         var intersectionArea = new TextArea();
-        intersectionArea.setPromptText("Schnittpunkt:");
+        intersectionArea.setPromptText("Intersection Point:");
 
         var inset = new Insets(5);
-        int col = 0;
-        Node[] nodes = {func1Label, func2Label, applyButton};
-        for (Node node : nodes) {
-            GridPane.setMargin(node, inset);
-            pane.add(node, 0, col);
-            col += 1;
-        }
-
-        String[] prompts = {"Steigung m", "y-Achsenabschnitt b"};
-        var textFields = new ArrayList<TextField>();
-        makeGrid(prompts, textFields, pane, 1, true);
+        var function1Field = new TextField();
+        var function2Field = new TextField();
+        function1Field.setPromptText("Function 1");
+        function2Field.setPromptText("Function 2");
 
         VBox.setMargin(intersectionArea, inset);
-        box.getChildren().addAll(pane, intersectionArea);
+        box.getChildren().addAll(function1Field, function2Field, submitButton, intersectionArea);
 
-        applyButton.setOnAction(e -> parseInputToIntersectionPoint(textFields, intersectionArea));
+        submitButton.setOnAction(e -> parseInputToIntersectionPoint(function1Field.getText(), function2Field.getText(), intersectionArea));
 
         stage.setScene(scene);
-        stage.setTitle("Schnittpunkt-Berechnung");
+        stage.setTitle("Calculate Intersection Point");
         stage.show();
     }
+    private void parseInputToIntersectionPoint(String func1, String func2, TextArea area) {
+        Window errorWindow = submitButton.getScene().getWindow();
+        String functionType1 = identifyFunctionType(func1, errorWindow);
+        String functionType2;
 
-    private void parseInputToIntersectionPoint(List<TextField> textFields, TextArea area) {
-        // Konvertiert die Daten aus den Textfeldern, zu Integern und werden, als Werte für zwei lineare Funktionen genutzt
-        var data = new ArrayList<Integer>();
+        if (functionType1 != null && functionType1.equals(LINEAR_FUNCTION)) {
+            LinearFunction function1 = new LinearFunction(M, B);
 
-        for (TextField tf : textFields) {
-            String input = tf.getText();
-            int inputInt = Integer.parseInt(input);
+            functionType2 = identifyFunctionType(func2, errorWindow);
+            if (functionType2 != null && functionType2.equals(LINEAR_FUNCTION)) {
+                LinearFunction function2 = new LinearFunction(M, B);
 
-            data.add(inputInt);
+                Coordinate intersectionPoint = Line.INTERSECT(function1, function2);
+                area.setText("SP" + "( " + intersectionPoint.getX() + " | " + intersectionPoint.getY() + " )");
+            }
         }
-        var func1 = new LinearFunction(data.get(0), data.get(1));
-        var func2 = new LinearFunction(data.get(2), data.get(3));
-        var intersectionPoint = Line.INTERSECT(func1, func2);
-
-        area.setText("SP( " + intersectionPoint.getX() + " | " + intersectionPoint.getY() + " )");
-    }
-
-    private void pointTestGUI() {
-        var stage = new Stage();
-        var box = new VBox();
-        var scene = new Scene(box, 300, 250);
-
-        var coorField = new TextField();
-        coorField.setPromptText("Format: x;y");
-        coorField.setFocusTraversable(false);
-
-        var funcField = new TextField();
-        funcField.setPromptText("Funktion");
-
-        var resultTxt = "Auswertung: ";
-        var checkLabel = new Label(resultTxt);
-
-        var linearFunction = new LinearFunction(10, 4);
-        applyButton.setOnAction(e -> {
-            var coordinate = new Coordinate();
-            List<Double> coordinates = parseToInteger(coorField.getText());
-            coordinate.setX(coordinates.get(0));
-            coordinate.setY(coordinates.get(1));
-
-
-            checkLabel.setText(returnTestSteps(coordinate, linearFunction));
-        });
-
-        box.getChildren().addAll(coorField, applyButton, checkLabel);
-
-        stage.setScene(scene);
-        stage.show();
     }
 
     public List<Double> parseToInteger(String input) {
@@ -652,12 +609,6 @@ public class FunctionVisualizer extends Application {
             handleFormatException(e);
         }
         return coorValue;
-    }
-
-    private String returnTestSteps(Coordinate coor, LinearFunction func) {
-        double y = coor.getY();
-        return Line.POINT_TEST(coor, func) ? "Auswertung: ✅\n" + Line.GET_POINT_TEST_STEPS() + "\n\t⇒" + y + " = " + Line.Y
-                : "Auswertung: ❌\n" + Line.GET_POINT_TEST_STEPS() + "\n\t⇒" + y + " ≠ " + Line.Y;
     }
 
     private void showError(AlertType type, Window owner, String title, String message) {
