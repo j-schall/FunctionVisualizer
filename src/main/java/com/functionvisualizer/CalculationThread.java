@@ -18,16 +18,16 @@ public class CalculationThread extends Thread {
         double m = FunctionVisualizer.M;
         double b = FunctionVisualizer.B;
         String function = FunctionVisualizer.SELECTED_FUNC;
+        System.out.println("Function: " + function);
         Object[] functions = FunctionVisualizer.FUNCTIONS.keySet().toArray();
-        System.out.println(Arrays.toString(functions));
         XYChart.Series<Number, Number> series = FunctionVisualizer.SERIES;
 
         // Aktualisieren der UI im JavaFX Application Thread
         Platform.runLater(() -> {
-            if (function.equals(functions[0])) {
+            if (function.equals(functions[1])) {
                 QuadraticFunction.create(m, range, coordinateTable, series);
                 scrollEvent();
-            } else if (function.equals(functions[1])) {
+            } else if (function.equals(functions[0])) {
                 ProportionalFunction.create(m, range, coordinateTable, series);
                 scrollEvent();
             } else if (function.equals(functions[2])) {
