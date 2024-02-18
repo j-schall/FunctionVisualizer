@@ -27,7 +27,7 @@ These steps are only possible in Linux, but if you're a MacOS user, you can easl
 <br>3.3. Download the JavaFX runtime: ```sudo apt install openjfx``` <br>
    Or install manually <a href="https://gluonhq.com/products/javafx/">here<a>
 
-This step can follow also MacOS users:<br>
+This step is also for MacOS users:<br>
 4. Start the programm: ```java --module-path /usr/share/openjfx/lib --add-modules javafx.controls -jar FunctionVisualizer_v1.2.jar```
 
 When you have problems, please inform me under the menuitem "issues".
