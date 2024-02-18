@@ -22,16 +22,6 @@ public class LinearFunction {
     public static void create(double m, double b, double range, TableView<Coordinate> pointTable, XYChart.Series<Number, Number> series) {
         ObservableList<Coordinate> dataPoints = FXCollections.observableArrayList();
         series.getData().clear();
-        System.out.println(b);
-        if (b < 0) {
-            for (double x = range; x <= -range; x++) { //Variable range definiert die Länge des Graphen
-                double y = m * x + b;
-                dataPoints.add(new Coordinate(x, y));
-                if (x == -range || x == range) {
-                    series.getData().add(new XYChart.Data<>(x, y));
-                }
-            }
-        }
         for (double x = -range; x <= range; x++) {
             double y = m * x + b;
             dataPoints.add(new Coordinate(x, y));

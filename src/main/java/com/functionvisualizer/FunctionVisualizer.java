@@ -21,14 +21,12 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
@@ -44,6 +42,7 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import javafx.util.Duration;
 import org.gillius.jfxutils.chart.AxisConstraint;
@@ -80,6 +79,8 @@ public class FunctionVisualizer extends Application {
     public final String PROPORTIONAL_FUNCTION = "proportional Function";
     public final String LINEAR_FUNCTION = "linear Function";
     public final String QUADRATIC_FUNCTION = "quadratic Function";
+    public final String SPF_QUADRATIC_FUNCTION = "SPF-Quadratic-Function";
+
 
     @Override
     public void start(Stage stage) {
@@ -159,15 +160,14 @@ public class FunctionVisualizer extends Application {
 
         var showCoordinates = new CheckBox("Show coordinates");
 
-        /*
-         * Button um das Optionenfenster zu öffnen
-         */
+
+        // Button um das Optionenfenster zu öffnen
         var showSettings = new Button();
         var view = new ImageView(new Image("com.functionvisualizer/img/menu_icon.png"));
         view.setFitHeight(18);
         showSettings.setGraphic(view);
 
-        /* Hier werden die Nodes der VBox hinzugefügt und angezeigt */
+        // Hier werden die Nodes der VBox hinzugefügt und angezeigt
         var settingsSide = new VBox();
 
         // Das Optionenfenster passt sich automatisch der Breite der Stage an
@@ -238,6 +238,7 @@ public class FunctionVisualizer extends Application {
         functions.put(PROPORTIONAL_FUNCTION, "f(x)=m*x");
         functions.put(LINEAR_FUNCTION, "f(x)=m*x+b");
         functions.put(QUADRATIC_FUNCTION, "f(x)=a*x^2");
+        functions.put(SPF_QUADRATIC_FUNCTION, "f(x)=a*(x-d)^2+e");
         return functions;
     }
 
@@ -255,7 +256,7 @@ public class FunctionVisualizer extends Application {
             // Patterns to get the right results, when parsing them to the specific function class
             Pattern linearPattern = Pattern.compile("^([+-]?\\d*\\.?\\d*)\\*?x([+-]?\\d*\\.?\\d*)$"); // f(x)=m*x+b
             Pattern quadraticPattern = Pattern.compile("^([+-]?\\d*\\.?\\d*)\\*?x\\^2$"); // f(x)=a+x^2
-            Pattern bPattern = Pattern.compile("[\\D]*([\\d]+)+[\\D]+([\\d]+)?"); // find m and b in a function and parse them
+            Pattern bPattern = Pattern.compile("([-]?\\d+)+[\\D]+([-]?\\d+)?"); // find m and b in a function and parse them
             Matcher matcher = bPattern.matcher(functionBody);
 
             if (matcher.matches()) {
@@ -269,6 +270,7 @@ public class FunctionVisualizer extends Application {
                         return PROPORTIONAL_FUNCTION;
                     }
                 } else if (functionBody.matches(quadraticPattern.pattern())) {
+                    M = Double.parseDouble(matcher.group(1));
                     return QUADRATIC_FUNCTION;
                 }
             }
@@ -457,8 +459,8 @@ public class FunctionVisualizer extends Application {
         submitButton.setOnAction(e -> {
             try {
                 func[0] = visualizeCalculatedFunc(textFields, visualizeButton, mainStage);
-                formelArea.setText(func[0]);
-            } catch (NumberFormatException ex) {
+            } catch (NumberFormatException ex) {    formelArea.setText(func[0]);
+
                 showError(AlertType.ERROR, submitButton.getScene().getWindow(), ex.getMessage(), "Die angegebenen Zahlen konnten nicht formatiert werden. " +
                         "Überprüfe deine Eingabe");
             }
@@ -467,7 +469,10 @@ public class FunctionVisualizer extends Application {
         pane.add(submitButton, 0, 3);
         pane.add(formelArea, 1, 4);
         box.getChildren().addAll(pane, formelArea, visualizeButton);
+
         stage.setScene(scene);
+        stage.initOwner(mainStage);
+        stage.initStyle(StageStyle.UTILITY);
         stage.setTitle("Calculate Linear Function");
         stage.show();
     }
@@ -576,9 +581,12 @@ public class FunctionVisualizer extends Application {
         submitButton.setOnAction(e -> parseInputToIntersectionPoint(function1Field.getText(), function2Field.getText(), intersectionArea));
 
         stage.setScene(scene);
+        stage.initOwner(mainStage);
+        stage.initStyle(StageStyle.UTILITY);
         stage.setTitle("Calculate Intersection Point");
         stage.show();
     }
+    
     private void parseInputToIntersectionPoint(String func1, String func2, TextArea area) {
         Window errorWindow = submitButton.getScene().getWindow();
         String functionType1 = identifyFunctionType(func1, errorWindow);

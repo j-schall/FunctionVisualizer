@@ -12,9 +12,6 @@ public class Coordinate extends Node {
         this.y = new SimpleDoubleProperty(y);
     }
 
-    public Coordinate() {
-    }
-
     public void setX(double x) {
         this.x = new SimpleDoubleProperty();
         this.x.set(x);
