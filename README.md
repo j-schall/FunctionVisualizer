@@ -11,7 +11,7 @@ With this tool you can:
 
 ## Installation Guide
 ### Windows
-1. Go to realises and download the FunctionVisualizer_v.1.1.zip folder
+1. Go to realises and download the FunctionVisualizer_v.1.2.zip folder
 2. Extract the downloaded ZIP folder
 3. Double click on the *.exe file and start the programm
 
@@ -26,7 +26,7 @@ With this tool you can:
 <br>3.3. Download the JavaFX runtime: ```sudo apt install openjfx``` <br>
    Or install manually <a href="https://gluonhq.com/products/javafx/">here<a>
 
-4. Start the programm: ```java --module-path /usr/share/openjfx/lib --add-modules javafx.controls -jar FunctionVisualizer_v1.1.jar```
+4. Start the programm: ```java --module-path /usr/share/openjfx/lib --add-modules javafx.controls -jar FunctionVisualizer_v1.2.jar```
 
 When you have problems, please inform me under the menuitem "issues".
 
