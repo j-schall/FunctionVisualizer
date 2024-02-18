@@ -15,7 +15,8 @@ With this tool you can:
 2. Extract the downloaded ZIP folder
 3. Double click on the *.exe file and start the programm
 
-### Linux
+### Linux (MacOS)
+These steps are only possible in Linux, but if you're a MacOS user, you can easly download Javafx, like in step 3.3 manually.
 1. Go to realises and download the FunctionVisualizer_jar.zip folder
 
 2. Extract the JAR on your system
@@ -26,6 +27,7 @@ With this tool you can:
 <br>3.3. Download the JavaFX runtime: ```sudo apt install openjfx``` <br>
    Or install manually <a href="https://gluonhq.com/products/javafx/">here<a>
 
+This step can follow also MacOS users:
 4. Start the programm: ```java --module-path /usr/share/openjfx/lib --add-modules javafx.controls -jar FunctionVisualizer_v1.2.jar```
 
 When you have problems, please inform me under the menuitem "issues".
